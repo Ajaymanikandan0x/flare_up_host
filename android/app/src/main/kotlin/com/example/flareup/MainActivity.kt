@@ -1,4 +1,4 @@
-package com.example.flare_up_host
+package com.example.flareup
 
 import io.flutter.embedding.android.FlutterActivity
 
