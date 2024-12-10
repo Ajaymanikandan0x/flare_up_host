@@ -1,6 +1,9 @@
+
+import 'package:flare_up_host/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/presentation/helpper/snackbar_helper.dart';
 import '../../../../core/routes/routs.dart';
 import '../../../../core/theme/text_theme.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -10,18 +13,29 @@ import '../../../../core/widgets/logo_gradient.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../dependency_injector.dart';
 import '../../../profile/presentation/bloc/host_profile_bloc.dart';
-import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/auth/google_log.dart';
 import '../widgets/auth/sign_up_text.dart';
 
-class SignIn extends StatelessWidget {
-  SignIn({super.key});
+class SignIn extends StatefulWidget {
+  const SignIn({super.key});
 
+  @override
+  State<SignIn> createState() => _SignInState();
+}
+
+class _SignInState extends State<SignIn> {
   final nameController = TextEditingController();
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,19 +51,14 @@ class SignIn extends StatelessWidget {
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error)),
-            );
+            SnackbarHelper.showError(context, state.error);
           } else if (state is AuthSuccess) {
-
-            final userId = state.userEntity.id.toString();
-            context.read<HostProfileBloc>().add(LoadHostProfile(userId));
-
-            // Handle success (navigate to home page)
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-
+            final role = state.userEntity.role;
+            if (role == 'hoster') {
+              final userId = state.userEntity.id.toString();
+              context.read<HostProfileBloc>().add(LoadHostProfile(userId));
+            }
+            SnackbarHelper.showSuccess(context, state.message);
             Navigator.pushReplacementNamed(context, AppRouts.hostHome);
           }
         },

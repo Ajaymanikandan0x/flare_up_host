@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 
 import '../../../../core/routes/routs.dart';
 import '../../../../core/theme/app_palette.dart';
@@ -214,8 +216,9 @@ class OtpScreen extends StatelessWidget {
                 ? AppPalette.darkCard
                 : AppPalette.lightCard,
             body: Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppPalette.gradient2),
+              child: LoadingAnimationWidget.staggeredDotsWave(
+                color: AppPalette.gradient2,
+                size: 50,
               ),
             ),
           );

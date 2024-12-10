@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import 'core/error/error_handler_service.dart';
 import 'core/network/dio_interceptor.dart';
 import 'core/network/network_service.dart';
 import 'core/storage/secure_storage_service.dart';
@@ -58,6 +59,8 @@ class DependencyInjector {
     final dio = Dio()..interceptors.add(AuthInterceptor(storageService, Dio()));
     final networkService = NetworkService(dio);
     final remoteDatasource = HostRemoteDatasource(networkService);
+     final errorHandlerService = AppErrorHandlerService();
+
 
     _authRepository = HostRepositoryImpl(remoteDatasource);
     _loginUseCase = LoginUseCase(_authRepository);
@@ -78,6 +81,7 @@ class DependencyInjector {
       authRepository: _authRepository,
       verifyResetPasswordOtpUseCase: verifyResetPasswordOtpUseCase,
       storageService: storageService,
+      errorHandler: errorHandlerService,
     );
   }
   

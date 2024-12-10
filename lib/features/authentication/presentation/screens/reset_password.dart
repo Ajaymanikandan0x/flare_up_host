@@ -42,6 +42,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     Responsive.init(context);
 
     // Calculate responsive dimensions
+    final imageHeight = Responsive.screenHeight * 0.15;
     final titleFontSize = Responsive.isTablet ? 24.0 : 20.0;
     final subtitleFontSize = Responsive.isTablet ? 18.0 : 16.0;
     final buttonHeight = Responsive.buttonHeight;
