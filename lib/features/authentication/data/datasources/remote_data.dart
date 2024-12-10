@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
-
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/app_error.dart';
 import '../../../../core/network/api_response.dart';
 import '../../../../core/network/network_service.dart';
-import '../models/otp_model.dart';
-import '../../../../core/utils/logger.dart';
-import '../models/host_model_signin.dart';
 import '../models/host_model_signup.dart';
+import '../models/otp_model.dart';
+import '../models/host_model_signin.dart';
+
+import '../../../../core/utils/logger.dart';
 
 class HostRemoteDatasource {
   final NetworkService _networkService;
@@ -43,7 +43,7 @@ class HostRemoteDatasource {
     required String username,
     required String password,
   }) async {
-    Logger.debug('Attempting login for user: $username');
+    Logger.debug('Attempting login for host: $username');
 
     return _networkService.safeApiCall(
       apiCall: () => dio.post(
@@ -64,7 +64,7 @@ class HostRemoteDatasource {
     required String email,
     required String role,
   }) async {
-    Logger.debug('Attempting signup for user: $username');
+    Logger.debug('Attempting signup for host: $username');
 
     return _networkService.safeApiCall(
       apiCall: () => dio.post(
@@ -97,7 +97,7 @@ class HostRemoteDatasource {
     required String otp,
   }) async {
     Logger.debug('Verifying OTP for email: $email');
-    
+
     try {
       final response = await dio.post(
         ApiEndpoints.baseUrl + ApiEndpoints.otpVerification,
@@ -124,7 +124,8 @@ class HostRemoteDatasource {
         if (data is Map) {
           if (data['error']?.contains('cache') == true) {
             throw AppError(
-              userMessage: 'Session expired. Please restart the signup process.',
+              userMessage:
+                  'Session expired. Please restart the signup process.',
               type: ErrorType.validation,
             );
           }
@@ -157,7 +158,7 @@ class HostRemoteDatasource {
 
   Future<ApiResponse<void>> resendOtp({required String email}) async {
     Logger.debug('Resending OTP for email: $email');
-    
+
     try {
       final response = await dio.post(
         ApiEndpoints.baseUrl + ApiEndpoints.resendOtp,
@@ -169,11 +170,13 @@ class HostRemoteDatasource {
       );
 
       Logger.debug('Resend OTP Response status: ${response.statusCode}');
-      
+
       // Handle HTML error response
-      if (response.data is String && response.data.toString().contains('<!DOCTYPE html>')) {
+      if (response.data is String &&
+          response.data.toString().contains('<!DOCTYPE html>')) {
         throw AppError(
-          userMessage: 'Service temporarily unavailable. Please try again later.',
+          userMessage:
+              'Service temporarily unavailable. Please try again later.',
           type: ErrorType.server,
           technicalMessage: 'Server returned HTML instead of JSON',
         );
@@ -201,7 +204,8 @@ class HostRemoteDatasource {
 
       if (response.statusCode != null && response.statusCode! >= 500) {
         throw AppError(
-          userMessage: 'Service temporarily unavailable. Please try again later.',
+          userMessage:
+              'Service temporarily unavailable. Please try again later.',
           type: ErrorType.server,
           technicalMessage: 'Server error: ${response.statusCode}',
         );

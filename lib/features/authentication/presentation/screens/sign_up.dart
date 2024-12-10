@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/routes/routs.dart';
 import '../../../../core/theme/text_theme.dart';
+import '../../../../core/utils/validation.dart';
 import '../../../../core/widgets/form_feild.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../dependency_injector.dart';
@@ -12,7 +13,7 @@ import '../bloc/auth_state.dart';
 import '../widgets/auth/google_log.dart';
 import '../widgets/auth/sign_up_text.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/utils/validation.dart';
+
 class SignUp extends StatelessWidget {
   SignUp({super.key});
 
@@ -108,37 +109,44 @@ class SignUp extends StatelessWidget {
                     validator: FormValidator.validatePassword,
                   ),
                   SizedBox(height: Responsive.spacingHeight),
-                  PrimaryButton(
-                    onTap: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (passwordController.text ==
-                            passwordConformController.text) {
-                        
-                          // Ensure correct mapping
-                          final email = emailController.text.trim();
-                          final fullName = fullNameController.text.trim();
-                          final username = nameController.text.trim();
-                          final password =
-                              passwordConformController.text.trim();
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final bool isLoading = state is AuthLoading;
+                      return PrimaryButton(
+                        onTap: () {
+                          if (_formKey.currentState!.validate()) {
+                            if (passwordController.text ==
+                                passwordConformController.text) {
+                            
+                              // Ensure correct mapping
+                              final email = emailController.text.trim();
+                              final fullName = fullNameController.text.trim();
+                              final username = nameController.text.trim();
+                              final password =
+                                  passwordConformController.text.trim();
 
-                          authBloc.add(SignupEvent(
-                            username: username,
-                            role: 'user',
-                            email: email,
-                            password: password,
-                            fullName: fullName,
-                          ));
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Passwords do not match")),
-                          );
-                        }
-                      }
+                              authBloc.add(SignupEvent(
+                                username: username,
+                                role: 'hoster',
+                                email: email,
+                                password: password,
+                                fullName: fullName,
+                              ));
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Passwords do not match")),
+                              );
+                            }
+                          }
+                        },
+                        text: 'Sign up',
+                        height: Responsive.buttonHeight,
+                        width: Responsive.screenWidth * 0.85,
+                        isLoading: isLoading,
+                        isEnabled: !isLoading,
+                      );
                     },
-                    text: 'Sign up',
-                    height: Responsive.buttonHeight,
-                    width: Responsive.screenWidth * 0.85,
                   ),
                   SizedBox(height: Responsive.spacingHeight),
                   Text(
