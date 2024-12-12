@@ -26,7 +26,7 @@ class AppRouts {
   static final Map<String, Widget Function(BuildContext)> routs = {
     logo: (_) => const Logo(),
     onBoard: (_) => const OnBoardingScreen(),
-    signIn: (_) => SignIn(),
+    signIn: (_) => const SignIn(),
     signUp: (_) => SignUp(),
     hostHome: (_) => const HostHome(),
     hostProfile: (_) => const HostProfile(),

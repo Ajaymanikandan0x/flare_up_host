@@ -15,7 +15,6 @@ class Logo extends StatefulWidget {
 class _LogoState extends State<Logo> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     Timer(const Duration(seconds: 5),

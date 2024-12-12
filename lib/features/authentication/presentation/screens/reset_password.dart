@@ -14,7 +14,7 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({Key? key}) : super(key: key);
+  const ResetPasswordScreen({super.key});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -40,9 +40,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     // Initialize responsive utilities
     Responsive.init(context);
-
-    // Calculate responsive dimensions
-    final imageHeight = Responsive.screenHeight * 0.15;
+  
     final titleFontSize = Responsive.isTablet ? 24.0 : 20.0;
     final subtitleFontSize = Responsive.isTablet ? 18.0 : 16.0;
     final buttonHeight = Responsive.buttonHeight;
@@ -103,7 +101,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         Container(
                           padding:
                               EdgeInsets.all(Responsive.isTablet ? 24 : 20),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: AppPalette.primaryGradient,
                           ),

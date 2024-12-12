@@ -35,7 +35,8 @@ class CloudinaryService {
       if (fileSize > 10 * 1024 * 1024) {
         throw AppError(
           userMessage: 'File size too large',
-          technicalMessage: 'File size: ${fileSize / (1024 * 1024)}MB exceeds 10MB limit',
+          technicalMessage:
+              'File size: ${fileSize / (1024 * 1024)}MB exceeds 10MB limit',
           type: ErrorType.validation,
         );
       }
@@ -43,7 +44,7 @@ class CloudinaryService {
       // Check connectivity
       try {
         await InternetAddress.lookup('api.cloudinary.com')
-            .timeout(Duration(seconds: _connectionTimeout));
+            .timeout(const Duration(seconds: _connectionTimeout));
       } catch (e) {
         throw ErrorHandler.handle(e);
       }
@@ -69,7 +70,7 @@ class CloudinaryService {
           print('Upload progress: $progress%');
         },
       ).timeout(
-        Duration(seconds: _uploadTimeout),
+        const Duration(seconds: _uploadTimeout),
         onTimeout: () => throw AppError(
           userMessage: 'Upload timed out',
           technicalMessage: 'Upload exceeded $_uploadTimeout seconds',
@@ -99,7 +100,7 @@ class CloudinaryService {
       // Video format validation
       final extension = videoFile.path.split('.').last.toLowerCase();
       final validFormats = ['mp4', 'mov', 'avi', 'mkv'];
-      
+
       if (!validFormats.contains(extension)) {
         throw AppError(
           userMessage: 'Invalid video format',
@@ -110,12 +111,12 @@ class CloudinaryService {
 
       // Video size limit (500MB for high quality)
       final fileSize = await videoFile.length();
-      final maxSize = 500 * 1024 * 1024; // 500MB
-      
+      const maxSize = 500 * 1024 * 1024; // 500MB
+
       if (fileSize > maxSize) {
         throw AppError(
           userMessage: 'Video size too large',
-          technicalMessage: 
+          technicalMessage:
               'Video size: ${fileSize / (1024 * 1024)}MB exceeds 500MB limit',
           type: ErrorType.validation,
         );

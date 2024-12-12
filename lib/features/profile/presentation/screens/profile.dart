@@ -89,9 +89,10 @@ class HostProfile extends StatelessWidget {
                   SizedBox(height: Responsive.spacingHeight),
                   TextButton(
                     onPressed: () async {
+                      final bloc = context.read<HostProfileBloc>();
                       File? imageFile = await ImagePickerService.pickImageFromGallery();
-                      if (imageFile != null) {
-                        context.read<HostProfileBloc>().add(UploadProfileImage(imageFile));
+                      if (imageFile != null && context.mounted) {
+                        bloc.add(UploadProfileImage(imageFile));
                       }
                     },
                     child: Text(

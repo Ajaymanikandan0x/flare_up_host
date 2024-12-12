@@ -119,7 +119,7 @@ class OtpScreen extends StatelessWidget {
                         SizedBox(height: Responsive.spacingHeight * 2),
                         Container(
                           padding: EdgeInsets.all(containerPadding),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: AppPalette.primaryGradient,
                           ),
