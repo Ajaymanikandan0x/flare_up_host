@@ -1,7 +1,7 @@
 import 'package:circle_nav_bar/circle_nav_bar.dart';
+import 'package:flare_up_host/features/location/presentation/screens/location_screen.dart';
 import 'package:flutter/material.dart';
 
-import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/events/presentation/screens/add_event.dart';
 import '../../features/home/presentation/screens/home.dart';
 import '../theme/app_palette.dart';
@@ -26,7 +26,7 @@ class _AppNavState extends State<AppNav> with SingleTickerProviderStateMixin {
   final List<Widget> _pages = [
     const HostHome(),
     const AddEventScreen(),
-    const ChatScreen(),
+    const LocationScreen(),
   ];
 
   @override
