@@ -143,9 +143,12 @@ class DependencyInjector {
   }
 
   void _setupEventDependencies() {
-    final eventMediaUploader = _mediaUploader as CloudinaryService;
+    final eventMediaUploader = _mediaUploader;
     _eventRemoteDataSource = EventRemoteDataSourceImpl(
-        _networkService, _storageService, eventMediaUploader);
+      _networkService,
+      _storageService,
+      eventMediaUploader,
+    );
     _eventRepository = EventRepositoryImpl(_eventRemoteDataSource);
     _categoriesUseCase = CategoriesUseCase(_eventRepository);
     _createEventUseCase = CreateEventUseCase(_eventRepository);

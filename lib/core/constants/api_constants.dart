@@ -42,4 +42,5 @@ class ApiEndpoints {
   //Values : 'Active', 'Cancelled', 'Cancel status request’
 
   static const eventCategory = 'events/event-types-and-categories/'; //(get) []
+  static const singleEvent = 'events/event/event_id/';
 }

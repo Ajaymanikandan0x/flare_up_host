@@ -2,6 +2,7 @@ import 'package:flare_up_host/features/events/presentation/bloc/event_event.dart
 import 'package:flare_up_host/features/events/presentation/bloc/event_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/error/app_error.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/usecases/create_event_usecase.dart';
@@ -111,8 +112,11 @@ class EventBloc extends Bloc<EventEvent, EventState> {
         eventTypes: eventTypes,
       ));
     } catch (e) {
-      Logger.error('Error loading categories:', e);
-      emit(EventError(e.toString()));
+      if (e is AppError) {
+        emit(EventError(e.userMessage));
+      } else {
+        emit(EventError('Failed to load categories'));
+      }
     }
   }
 }
