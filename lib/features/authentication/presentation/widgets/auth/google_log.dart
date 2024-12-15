@@ -9,6 +9,7 @@ import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
 import '../../../../../core/theme/app_palette.dart';
 import '../../../../../core/theme/text_theme.dart';
+import '../../../../../core/routes/routs.dart';
 
 class GoogleSignInButton extends StatefulWidget {
   const GoogleSignInButton({super.key});
@@ -109,18 +110,18 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-
         if (state is AuthSuccess) {
-          Navigator.pushReplacementNamed(context, '/home');
-
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRouts.appNav,
+            (route) => false,
+          );
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.error),
               backgroundColor: Colors.red,
-
               duration: const Duration(seconds: 3),
-
             ),
           );
         }

@@ -19,6 +19,7 @@ void main() async {
     providers: [
       BlocProvider(create: (context) => DependencyInjector().authBloc),
       BlocProvider(create: (context) => DependencyInjector().hostProfileBloc),
+      BlocProvider(create: (context) => DependencyInjector().eventBloc),
       BlocProvider(create: (context) => ThemeCubit(prefs)),
     ],
     child: const MyApp(),
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
           theme: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
           onGenerateRoute: AppRouts.generateRoute,
           initialRoute: AppRouts.logo,
+          // home: AddEventScreen(),
         );
       },
     );

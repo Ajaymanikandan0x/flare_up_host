@@ -7,7 +7,8 @@ import '../../../../core/theme/app_palette.dart';
 import '../../../../core/theme/text_theme.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/validation.dart';
-import '../../../../core/widgets/form_feild.dart';
+import '../../../../core/widgets/form_field.dart';
+import '../../../../core/widgets/password_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -123,14 +124,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                         ),
                         SizedBox(height: spacingHeight * 2),
-                        AppFormField(
+                        PasswordField(
                           hint: 'New Password',
                           controller: newPasswordController,
                           validator: FormValidator.validatePassword,
-                          isPassword: true,
                         ),
                         SizedBox(height: spacingHeight),
-                        AppFormField(
+                        PasswordField(
                           hint: 'Confirm Password',
                           controller: confirmPasswordController,
                           validator: (value) {
@@ -139,7 +139,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             }
                             return null;
                           },
-                          isPassword: true,
                         ),
                         SizedBox(height: spacingHeight * 2),
                         BlocBuilder<AuthBloc, AuthState>(

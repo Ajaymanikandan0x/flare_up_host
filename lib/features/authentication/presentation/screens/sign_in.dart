@@ -1,4 +1,3 @@
-
 import 'package:flare_up_host/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,8 +7,9 @@ import '../../../../core/routes/routs.dart';
 import '../../../../core/theme/text_theme.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/validation.dart';
-import '../../../../core/widgets/form_feild.dart';
+import '../../../../core/widgets/form_field.dart';
 import '../../../../core/widgets/logo_gradient.dart';
+import '../../../../core/widgets/password_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../dependency_injector.dart';
 import '../../../profile/presentation/bloc/host_profile_bloc.dart';
@@ -40,7 +40,7 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     Responsive.init(context);
-    
+
     final authBloc = DependencyInjector().authBloc;
     return Scaffold(
         body: Padding(
@@ -59,7 +59,11 @@ class _SignInState extends State<SignIn> {
               context.read<HostProfileBloc>().add(LoadHostProfile(userId));
             }
             SnackbarHelper.showSuccess(context, state.message);
-            Navigator.pushReplacementNamed(context, AppRouts.hostHome);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRouts.appNav,
+              (route) => false,
+            );
           }
         },
         child: SingleChildScrollView(
@@ -87,10 +91,9 @@ class _SignInState extends State<SignIn> {
                   validator: FormValidator.validateUserName,
                 ),
                 SizedBox(height: Responsive.spacingHeight),
-                AppFormField(
+                PasswordField(
                   hint: 'password',
                   icon: const Icon(Icons.lock),
-                  isPassword: true,
                   controller: passwordController,
                   validator: FormValidator.validatePassword,
                 ),

@@ -8,7 +8,7 @@ import '../error/app_error.dart';
 import '../error/error_handler.dart';
 import '../storage/secure_storage_service.dart';
 
-enum UploadType { profile, event, video }
+enum UploadType { profile, event, video, eventBanner }
 
 class CloudinaryService {
   final Dio _dio;
@@ -222,6 +222,8 @@ class CloudinaryService {
         return 'events';
       case UploadType.video:
         return 'videos';
+      case UploadType.eventBanner:
+        return 'event_banners';
     }
   }
 

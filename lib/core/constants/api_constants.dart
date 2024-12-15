@@ -20,4 +20,27 @@ class ApiEndpoints {
   static const setNewPassword =
       'set-new-password/'; //(post) new_password, confirm_password, email
 
+  //Events
+  static const eventBaseUrl = 'http://10.0.2.2:8082/';
+  static const createEvent =
+      'events/'; //(post)   'title', 'description', 'category', 'type', 'host_id', 'organization_id',
+  //'latitude', 'longitude', 'address_line_1', 'city', 'state', 'country',
+  //'payment_required', 'ticket_price', 'participant_capacity', 'banner_image',
+  //'promo_video', 'start_date_time', 'end_date_time', 'registration_deadline',
+
+  static const editEvent = 'events/event/event_id/'; //(put)
+  static const hosterEvent =
+      'events/events/hoster/hoster_id/'; //(get) To fetch all events of a particular hoster
+//'id', 'title', 'description', 'category', 'type', 'host_id', 'organization_id',
+//             'latitude', 'longitude', 'address_line_1', 'city', 'state', 'country',
+//             'payment_required', 'ticket_price', 'participant_capacity', 'banner_image',
+//             'promo_video', 'start_date_time', 'end_date_time', 'registration_deadline',
+//             'created_at', 'updated_at', 'status', 'status_request', 'approval_status', 'approval_comments',
+//             'approval_updated_at', 'key_participants'
+  static const eventStatus =
+      'events/event/event_id/update_event_status/'; //(post)  Key : event_status
+  //Values : 'Active', 'Cancelled', 'Cancel status request’
+
+  static const eventCategory = 'events/event-types-and-categories/'; //(get) []
+  static const singleEvent = 'events/event/event_id/';
 }
