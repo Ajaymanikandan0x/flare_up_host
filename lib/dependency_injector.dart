@@ -15,6 +15,15 @@ import 'features/authentication/domain/usecases/resend_otp_usecase.dart';
 import 'features/authentication/domain/usecases/signup_usecase.dart';
 import 'features/authentication/domain/usecases/verify_reset_password_otp_usecase.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
+import 'features/events/data/datasources/event_remote_datasource_impl.dart';
+import 'features/events/data/repositories/event_repository_impl.dart';
+import 'features/events/domain/repositories/event_repository.dart';
+import 'features/events/domain/usecases/category_usecase.dart';
+import 'features/events/domain/usecases/create_event_usecase.dart';
+import 'features/events/domain/usecases/host_event_usecase.dart';
+import 'features/events/domain/usecases/update_event_usecase.dart';
+import 'features/events/domain/usecases/upload_event_media_usecase.dart';
+import 'features/events/presentation/bloc/event_bloc.dart';
 import 'features/profile/data/datasources/host_profile_remote_datasource.dart';
 import 'features/profile/data/repositories/profile_image_repository_impl.dart';
 import 'features/profile/data/repositories/host_profile_repository_impl.dart';
@@ -42,25 +51,47 @@ class DependencyInjector {
   late ResendOtpUseCase _resendOtpUseCase;
   late AuthBloc _authBloc;
 
-  // User profile dependencies
+  // Host profile dependencies
   late HostProfileRemoteDataSourceImpl _hostProfileRemoteDatasource;
   late HostProfileRepositoryDomain _hostProfileRepository;
   late GetHostProfileUseCase _getUserProfileUseCase;
   late UpdateHostProfileUseCase _updateUserProfileUseCase;
   late HostProfileBloc _hostProfileBloc;
 
+  // Event dependencies
+  late EventRemoteDataSourceImpl _eventRemoteDataSource;
+  late EventRepositoryDomain _eventRepository;
+  late CategoriesUseCase _categoriesUseCase;
+  late CreateEventUseCase _createEventUseCase;
+  late UpdateEventUseCase _updateEventUseCase;
+  late GetHostEventsUseCase _getHostEventsUseCase;
+  late UploadEventMediaUseCase _uploadEventMediaUseCase;
+  late EventBloc _eventBloc;
+
+  // Shared services
+  late final SecureStorageService _storageService;
+  late final Dio _dio;
+  late final NetworkService _networkService;
+  late final AppErrorHandlerService _errorHandlerService;
+  late final CloudinaryService _mediaUploader;
+
   void setup() {
+    _setupSharedServices();
     _setupAuthenticationDependencies();
     _setupHostProfileDependencies();
+    _setupEventDependencies();
+  }
+
+  void _setupSharedServices() {
+    _storageService = SecureStorageService();
+    _dio = Dio()..interceptors.add(AuthInterceptor(_storageService, Dio()));
+    _networkService = NetworkService(_dio);
+    _errorHandlerService = AppErrorHandlerService();
+    _mediaUploader = CloudinaryService(_storageService);
   }
 
   void _setupAuthenticationDependencies() {
-    final storageService = SecureStorageService();
-    final dio = Dio()..interceptors.add(AuthInterceptor(storageService, Dio()));
-    final networkService = NetworkService(dio);
-    final remoteDatasource = HostRemoteDatasource(networkService);
-     final errorHandlerService = AppErrorHandlerService();
-
+    final remoteDatasource = HostRemoteDatasource(_networkService);
 
     _authRepository = HostRepositoryImpl(remoteDatasource);
     _loginUseCase = LoginUseCase(_authRepository);
@@ -80,24 +111,21 @@ class DependencyInjector {
       logoutUseCase: _logoutUseCase,
       authRepository: _authRepository,
       verifyResetPasswordOtpUseCase: verifyResetPasswordOtpUseCase,
-      storageService: storageService,
-      errorHandler: errorHandlerService,
+      storageService: _storageService,
+      errorHandler: _errorHandlerService,
     );
   }
-  
-  void _setupHostProfileDependencies() {
-    final storageService = SecureStorageService();
-    final dio = Dio()..interceptors.add(AuthInterceptor(storageService, Dio()));
 
-    final cloudinaryService = CloudinaryService(storageService);
+  void _setupHostProfileDependencies() {
+    final cloudinaryService = CloudinaryService(_storageService);
     final profileImageRepository =
         ProfileImageRepositoryImpl(cloudinaryService);
     final uploadProfileImageUseCase =
         UploadProfileImageUseCase(profileImageRepository);
 
     _hostProfileRemoteDatasource = HostProfileRemoteDataSourceImpl(
-      storageService: storageService,
-      dio: dio,
+      storageService: _storageService,
+      dio: _dio,
     );
 
     _hostProfileRepository =
@@ -110,11 +138,33 @@ class DependencyInjector {
       getHostProfile: _getUserProfileUseCase,
       updateHostProfile: _updateUserProfileUseCase,
       uploadProfileImage: uploadProfileImageUseCase,
-      storageService: storageService,
+      storageService: _storageService,
+    );
+  }
+
+  void _setupEventDependencies() {
+    final eventMediaUploader = _mediaUploader as CloudinaryService;
+    _eventRemoteDataSource = EventRemoteDataSourceImpl(
+        _networkService, _storageService, eventMediaUploader);
+    _eventRepository = EventRepositoryImpl(_eventRemoteDataSource);
+    _categoriesUseCase = CategoriesUseCase(_eventRepository);
+    _createEventUseCase = CreateEventUseCase(_eventRepository);
+    _updateEventUseCase = UpdateEventUseCase(_eventRepository);
+    _getHostEventsUseCase = GetHostEventsUseCase(_eventRepository);
+    _uploadEventMediaUseCase = UploadEventMediaUseCase(_eventRepository);
+
+    _eventBloc = EventBloc(
+      createEventUseCase: _createEventUseCase,
+      updateEventUseCase: _updateEventUseCase,
+      getHostEventsUseCase: _getHostEventsUseCase,
+      uploadEventMediaUseCase: _uploadEventMediaUseCase,
+      storageService: _storageService,
+      categoriesUseCase: _categoriesUseCase,
     );
   }
 
   // Getters
   AuthBloc get authBloc => _authBloc;
   HostProfileBloc get hostProfileBloc => _hostProfileBloc;
+  EventBloc get eventBloc => _eventBloc;
 }

@@ -10,6 +10,10 @@ import '../../features/authentication/presentation/screens/sign_up.dart';
 import '../../features/home/presentation/screens/home.dart';
 import '../../features/profile/presentation/screens/edit.dart';
 import '../../features/profile/presentation/screens/profile.dart';
+import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/location/presentation/screens/location_screen.dart';
+import '../widgets/bottom_navbar.dart';
+
 
 class AppRouts {
   static const logo = '/';
@@ -22,6 +26,9 @@ class AppRouts {
   static const editProf = '/editProfile';
   static const forgotPassword = '/forgotPassword';
   static const resetPassword = '/resetPassword';
+  static const chat = '/chat';
+  static const location = '/location';
+  static const appNav = '/app_nav';
 
   static final Map<String, Widget Function(BuildContext)> routs = {
     logo: (_) => const Logo(),
@@ -34,6 +41,9 @@ class AppRouts {
     editProf: (_) => const EditProfile(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
     resetPassword: (_) => const ResetPasswordScreen(),
+    chat: (_) => const ChatScreen(),
+    location: (_) => const LocationScreen(),
+    appNav: (_) => const AppNav(),
   };
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
