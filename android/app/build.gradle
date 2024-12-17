@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.flare_up_host"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

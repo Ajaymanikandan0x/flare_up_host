@@ -11,6 +11,8 @@ class SecureStorageService {
   static const String _userIdKey = 'user_id';
   static const String _cloudinaryApiKey = '366556954235497';
   static const String _cloudinaryApiSecret = 'rXaQX1rtw1HLav_tisG2e1eRw8Y';
+  static const String _googleMapsApiKey =
+      'AIzaSyA_2QMkoy2q7hjzTJp_8OVjkwI6-Gqdtsg';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -28,6 +30,16 @@ class SecureStorageService {
   }) async {
     await _storage.write(key: _cloudinaryApiKey, value: apiKey);
     await _storage.write(key: _cloudinaryApiSecret, value: apiSecret);
+  }
+
+  Future<void> saveGoogleMapsApiKey({
+    required String apiKey,
+  }) async {
+    await _storage.write(key: _googleMapsApiKey, value: apiKey);
+  }
+
+  Future<String?> getGoogleMapsApiKey() async {
+    return await _storage.read(key: _googleMapsApiKey);
   }
 
   Future<String?> getCloudinaryApiKey() async {
