@@ -27,15 +27,13 @@ class EventError extends EventBlocState {
 
 class CategoriesLoaded extends EventBlocState {
   final List<CategoryEntity> categories;
-  final List<String> eventTypes;
 
   const CategoriesLoaded({
     required this.categories,
-    required this.eventTypes,
   });
 
   @override
-  List<Object?> get props => [categories, eventTypes];
+  List<Object?> get props => [categories];
 }
 
 class EventMediaUploading extends EventBlocState {}

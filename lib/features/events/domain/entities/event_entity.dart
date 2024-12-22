@@ -40,4 +40,17 @@ class EventEntity {
     this.promoVideo,
     required this.hostId,
   });
+
+  String toDebugString() {
+    return '''
+      EventEntity {
+        name: $name,
+        category: $category,
+        type: $type,
+        bannerImage: $bannerImage,
+        promoVideo: $promoVideo,
+        hostId: $hostId
+      }
+    ''';
+  }
 }

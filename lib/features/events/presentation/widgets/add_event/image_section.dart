@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/utils/image_picker_service.dart';
+import '../../../../../core/utils/logger.dart';
 import '../../../domain/entities/media_entity.dart';
 import '../../../domain/repositories/event_repository.dart';
 import '../../bloc/event_bloc.dart';
@@ -44,17 +45,28 @@ class _ImageSectionState extends State<ImageSection> {
       },
       child: GestureDetector(
         onTap: () async {
-          final image = await ImagePickerService.pickImageFromGallery();
-          if (image != null) {
-            setState(() {
-              selectedImage = image;
-            });
-            context.read<EventBloc>().add(
-                  UploadEventMediaEvent(
-                    file: image,
-                    type: MediaType.image,
-                  ),
-                );
+          try {
+            final image = await ImagePickerService.pickImageFromGallery();
+            if (image != null) {
+              Logger.debug('Image selected: ${image.path}');
+              setState(() {
+                selectedImage = image;
+              });
+              
+              context.read<EventBloc>().add(
+                UploadEventMediaEvent(
+                  file: image,
+                  type: MediaType.image,
+                ),
+              );
+            } else {
+              Logger.debug('No image selected');
+            }
+          } catch (e) {
+            Logger.error('Error selecting image:', e);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error selecting image: $e')),
+            );
           }
         },
         child: Container(

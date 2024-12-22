@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/widgets/drop_down.dart';
+import '../../../domain/entities/category_entity.dart';
 import '../../bloc/event_bloc.dart';
 import '../../bloc/event_state.dart';
 
@@ -28,6 +29,34 @@ class CategorySection extends StatefulWidget {
 class _CategorySectionState extends State<CategorySection> {
   final _categoryKey = GlobalKey<DropdownSearchState>();
   final _typeKey = GlobalKey<DropdownSearchState>();
+  List<String> filteredEventTypes = [];
+
+  void _updateEventTypes(String? categoryName, List<CategoryEntity> categories) {
+    if (categoryName == null || categories.isEmpty) {
+      setState(() {
+        filteredEventTypes = [];
+        widget.selectedType.text = '';
+      });
+      return;
+    }
+
+    final category = categories.firstWhere(
+      (c) => c.name == categoryName,
+      orElse: () => CategoryEntity(
+        id: 0,
+        name: '',
+        description: '',
+        status: '',
+        updatedAt: DateTime.now(),
+        eventTypes: [],
+      ),
+    );
+
+    setState(() {
+      filteredEventTypes = category.eventTypes.map((type) => type.name).toList();
+      widget.selectedType.text = '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +83,6 @@ class _CategorySectionState extends State<CategorySection> {
           }
 
           final categories = state.categories.map((c) => c.name).toList();
-          final eventTypes = state.eventTypes;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,12 +105,13 @@ class _CategorySectionState extends State<CategorySection> {
                 onChanged: (value) {
                   if (!mounted) return;
                   widget.selectedCategory.text = value ?? '';
+                  _updateEventTypes(value, state.categories);
                 },
               ),
               SizedBox(height: Responsive.spacingHeight),
               DropDown(
                 dropDownKey: _typeKey,
-                items: eventTypes,
+                items: filteredEventTypes,
                 selectedItem: widget.selectedType.text,
                 hint: 'Select Event Type',
                 errorText: widget.typeError,
@@ -103,7 +132,6 @@ class _CategorySectionState extends State<CategorySection> {
 
   @override
   void dispose() {
-    // Close dropdowns before disposing
     _categoryKey.currentState?.closeDropDownSearch();
     _typeKey.currentState?.closeDropDownSearch();
     super.dispose();

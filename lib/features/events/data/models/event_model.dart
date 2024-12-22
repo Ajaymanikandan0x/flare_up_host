@@ -52,14 +52,14 @@ class EventModel extends EventEntity {
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
+      'title': name,
       'description': description,
-      'category': category,
-      'type': type,
+      'category': int.tryParse(category) ?? 1,
+      'type': int.tryParse(type) ?? 1,
       'is_payment_required': isPaymentRequired,
       'ticket_price': ticketPrice,
-      'latitude': latitude,
-      'longitude': longitude,
+      'latitude': double.parse(latitude.toStringAsFixed(6)),
+      'longitude': double.parse(longitude.toStringAsFixed(6)),
       'address_line_1': addressLine1,
       'city': city,
       'state': state,
@@ -71,7 +71,6 @@ class EventModel extends EventEntity {
       'banner_image': bannerImage,
       'promo_video': promoVideo,
       'host_id': hostId,
-   
     };
   }
 

@@ -8,11 +8,13 @@ class DateField extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
   final Widget? prefixIcon;
+  final Function(String)? onChanged;
   const DateField({
     super.key, 
     required this.controller, 
     this.label, 
-    this.prefixIcon
+    this.prefixIcon, 
+    this.onChanged,
   });
 
   @override
@@ -55,6 +57,24 @@ class _DateFieldState extends State<DateField> {
           horizontal: 23,
         ),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select a date';
+        }
+        
+        try {
+          final selectedDate = DateFormat('dd/MM/yyyy').parse(value);
+          final now = DateTime.now();
+          
+          if (selectedDate.isBefore(now)) {
+            return 'Date cannot be in the past';
+          }
+          
+          return null;
+        } catch (e) {
+          return 'Please enter a valid date';
+        }
+      },
     );
   }
 
@@ -70,6 +90,7 @@ class _DateFieldState extends State<DateField> {
       setState(() {
         widget.controller.text = DateFormat('dd/MM/yyyy').format(pickedDate);
       });
+      widget.onChanged?.call(widget.controller.text);
     }
   }
 }

@@ -1,22 +1,11 @@
 import 'dart:io';
 
-import 'package:dropdown_search/dropdown_search.dart';
-import 'package:flare_up_host/core/routes/routs.dart';
-import 'package:flare_up_host/core/utils/file_picker_service.dart';
-import 'package:flare_up_host/core/utils/image_picker_service.dart';
-import 'package:flare_up_host/core/widgets/drop_down.dart';
-import 'package:flare_up_host/core/widgets/time_picker.dart';
 import 'package:flare_up_host/features/events/domain/entities/event_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/widgets/date_field.dart';
-import '../../../../core/widgets/form_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/widgets/toggle.dart';
-import '../../../../core/widgets/video_player.dart';
 import '../bloc/event_bloc.dart';
 import '../bloc/event_event.dart';
 import '../bloc/event_state.dart';
@@ -28,8 +17,7 @@ import '../widgets/add_event/location_section.dart';
 import '../widgets/add_event/payment_section.dart';
 import '../widgets/add_event/schedule_section.dart';
 import '../widgets/add_event/video_section.dart';
-import '../widgets/image_card.dart';
-import '../../../../core/storage/secure_storage_service.dart';
+import 'approval.dart';
 
 class AddEventScreen extends StatefulWidget {
   const AddEventScreen({super.key});
@@ -62,6 +50,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final eventCountryController = TextEditingController();
   final selectedCategoryController = TextEditingController();
   final selectedTypeController = TextEditingController();
+  final eventStartTimeController = TextEditingController();
+  final eventEndTimeController = TextEditingController();
+  final eventRegistrationDeadlineTimeController = TextEditingController();
   bool isPaymentRequired = false;
   File? image;
   File? video;
@@ -120,10 +111,12 @@ class _AddEventScreenState extends State<AddEventScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ScheduleSection(
+              eventStartTimeController: eventStartTimeController,
               eventStartDateController: eventStartDateController,
               eventEndDateController: eventEndDateController,
               eventRegistrationDeadlineController:
-                  eventRegistrationDeadlineController,
+                  eventRegistrationDeadlineController, eventEndTimeController: eventEndTimeController,
+                  eventRegistrationDeadlineTimeController: eventRegistrationDeadlineTimeController,
             ),
             SizedBox(height: Responsive.spacingHeight * 2),
             CapacitySection(
@@ -227,91 +220,89 @@ class _AddEventScreenState extends State<AddEventScreen> {
       return;
     }
 
-    // Get the current hoster ID
-    final hosterId = await context.read<SecureStorageService>().getUserId();
-
-    if (hosterId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User ID not found')),
-      );
-      return;
-    }
-
-    // Validate all required fields
-    if (selectedCategory == null) {
-      setState(() => categoryError = 'Please select a category');
-      return;
-    }
-    if (selectedType == null) {
-      setState(() => typeError = 'Please select an event type');
-      return;
-    }
-    if (image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add a banner image')),
-      );
-      return;
-    }
-
-    // Validate dates
     try {
-      final startDate = DateTime.parse(eventStartDateController.text);
-      final endDate = DateTime.parse(eventEndDateController.text);
-      final registrationDeadline =
-          DateTime.parse(eventRegistrationDeadlineController.text);
+      // Add debug logs
+      print('[DEBUG] Image file: $image');
+      print('[DEBUG] Banner image URL: $bannerImageUrl');
+      
+      if (image == null || bannerImageUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select and upload a banner image')),
+        );
+        return;
+      }
 
-      if (endDate.isBefore(startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('End date cannot be before start date')),
-        );
-        return;
-      }
-      if (registrationDeadline.isAfter(startDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Registration deadline must be before event start')),
-        );
-        return;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid dates')),
+      // Add debug log for event data
+      final eventData = EventEntity(
+        name: eventNameController.text,
+        description: eventDescriptionController.text,
+        category: selectedCategoryController.text,
+        type: selectedTypeController.text,
+        isPaymentRequired: isPaymentRequired,
+        ticketPrice: isPaymentRequired ? double.parse(eventTicketPriceController.text) : 0,
+        startDateTime: _parseAndFormatDateTime(
+          eventStartDateController.text,
+          eventStartTimeController.text,
+        ) ?? DateTime.now(),
+        endDateTime: _parseAndFormatDateTime(
+          eventEndDateController.text,
+          eventEndTimeController.text,
+        ) ?? DateTime.now().add(const Duration(hours: 1)),
+        registrationDeadline: _parseAndFormatDateTime(
+          eventRegistrationDeadlineController.text,
+          eventRegistrationDeadlineTimeController.text,
+        ) ?? DateTime.now().add(const Duration(hours: 1)),
+   
+        
+        participantCapacity: int.parse(eventParticipantCapacityController.text),
+        latitude: latitude!,
+        longitude: longitude!,
+        addressLine1: eventAddressLine1Controller.text,
+        city: eventCityController.text,
+        state: eventStateController.text,
+        country: eventCountryController.text,
+        hostId: 2, // Using the hostId from logs
+        bannerImage: bannerImageUrl,
+        promoVideo: promoVideoUrl,
       );
-      return;
+      print('[DEBUG] Event data before bloc: ${eventData.toDebugString()}');
+      
+      // Add event creation event to bloc
+      context.read<EventBloc>().add(CreateEventEvent(eventData, image!, video));
+
+    } catch (e) {
+      print('[ERROR] Form submission error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
+  }
 
-    final eventData = EventEntity(
-      name: eventNameController.text,
-      description: eventDescriptionController.text,
-      category: selectedCategory!,
-      type: selectedType!,
-      isPaymentRequired: isPaymentRequired,
-      ticketPrice:
-          isPaymentRequired ? double.parse(eventTicketPriceController.text) : 0,
-      startDateTime: DateTime.parse(eventStartDateController.text),
-      endDateTime: DateTime.parse(eventEndDateController.text),
-      registrationDeadline:
-          DateTime.parse(eventRegistrationDeadlineController.text),
-      participantCapacity: int.parse(eventParticipantCapacityController.text),
-      latitude: latitude!,
-      longitude: longitude!,
-      addressLine1: eventAddressLine1Controller.text,
-      city: eventCityController.text,
-      state: eventStateController.text,
-      country: eventCountryController.text,
-      hostId: int.parse(hosterId),
-      bannerImage: bannerImageUrl,
-      promoVideo: promoVideoUrl,
-    );
+  DateTime? _parseAndFormatDateTime(String date, String time) {
+    try {
+      if (date.isEmpty) return null;
+      
+      // Parse date (DD/MM/YYYY format)
+      final dateParts = date.split('/');
+      if (dateParts.length != 3) return null;
+      
+      // Parse time (HH:mm format)
+      final timeParts = time.isEmpty ? ['00', '00'] : time.split(':');
+      if (timeParts.length != 2) return null;
 
-    context.read<EventBloc>().add(
-          CreateEventEvent(
-            eventData,
-            image!,
-            video,
-          ),
-        );
+      final dateTime = DateTime(
+        int.parse(dateParts[2]), // year
+        int.parse(dateParts[1]), // month
+        int.parse(dateParts[0]), // day
+        int.parse(timeParts[0]), // hour
+        int.parse(timeParts[1]), // minute
+      );
+
+      return dateTime;
+    } catch (e) {
+      print('Date parsing error: $e');
+      return null;
+    }
   }
 
   @override
@@ -348,10 +339,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 SnackBar(content: Text(state.message)),
               );
             } else if (state is EventSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Event created successfully')),
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const EventApprovalWaitingScreen(),
+                ),
               );
-              Navigator.of(context).pop();
             }
           },
           child: Form(
@@ -410,6 +402,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
     eventCountryController.dispose();
     selectedCategoryController.dispose();
     selectedTypeController.dispose();
+    eventStartTimeController.dispose();
+    eventEndTimeController.dispose();
+    eventRegistrationDeadlineTimeController.dispose();
     super.dispose();
   }
 }

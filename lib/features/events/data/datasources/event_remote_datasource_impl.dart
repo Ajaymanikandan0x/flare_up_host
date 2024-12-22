@@ -27,19 +27,27 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
     File? promoVideo,
   }) async {
     try {
-      // Validate files first
-      if (bannerImage == null) {
+      Logger.debug('Creating event with:');
+      Logger.debug('Event data: ${event.toJson()}');
+      Logger.debug('Banner image: ${bannerImage?.path}');
+      Logger.debug('Banner image exists: ${bannerImage?.existsSync()}');
+      Logger.debug('Event banner URL: ${event.bannerImage}');
+
+      // Validate files
+      if (bannerImage == null && event.bannerImage == null) {
         throw AppError(
           userMessage: 'Banner image is required',
           type: ErrorType.validation,
         );
       }
       
-      if (!await _validateMediaFiles(bannerImage, promoVideo)) {
-        throw AppError(
-          userMessage: 'Invalid media files',
-          type: ErrorType.validation,
-        );
+      if (bannerImage != null) {
+        if (!await _validateMediaFiles(bannerImage, promoVideo)) {
+          throw AppError(
+            userMessage: 'Invalid media files',
+            type: ErrorType.validation,
+          );
+        }
       }
 
       final eventData = await _prepareEventData(
@@ -48,6 +56,7 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
         promoVideo: promoVideo,
       );
       
+      Logger.debug('Prepared event data: $eventData');
       final options = await getRequestOptions();
       
       return await makeRequest(
@@ -65,15 +74,32 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
     }
   }
 
-  Future<bool> _validateMediaFiles(File bannerImage, File? promoVideo) async {
+  Future<bool> _validateMediaFiles(File? bannerImage, File? promoVideo) async {
     // Validate banner image
+    if (bannerImage == null) {
+      throw AppError(
+        userMessage: 'Banner image is required',
+        type: ErrorType.validation,
+      );
+    }
+
     final imageValidation = await FormValidator.validateImage(bannerImage);
-    if (imageValidation != null) return false;
+    if (imageValidation != null) {
+      throw AppError(
+        userMessage: imageValidation,
+        type: ErrorType.validation,
+      );
+    }
 
     // Validate promo video if provided
     if (promoVideo != null) {
       final videoValidation = await FormValidator.validateVideo(promoVideo);
-      if (videoValidation != null) return false;
+      if (videoValidation != null) {
+        throw AppError(
+          userMessage: videoValidation,
+          type: ErrorType.validation,
+        );
+      }
     }
 
     return true;

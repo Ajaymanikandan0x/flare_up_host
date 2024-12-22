@@ -8,6 +8,7 @@ import '../../domain/usecases/upload_event_media_usecase.dart';
 import '../../domain/usecases/category_usecase.dart';
 import 'event_event.dart';
 import 'event_state.dart';
+import '../../../../core/utils/logger.dart';
 
 
 class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
@@ -41,17 +42,31 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
     try {
       emit(EventLoading());
       
-      // Validate media files
-      if (event.bannerImage == null) {
+      Logger.debug('Starting event creation');
+      Logger.debug('Event entity: ${event.eventEntity.toDebugString()}');
+      Logger.debug('Banner image file: ${event.bannerImage?.path}');
+      Logger.debug('Banner image URL: ${event.eventEntity.bannerImage}');
+      
+      final hosterId = await storageService.getUserId();
+      Logger.debug('Retrieved hosterId: $hosterId');
+      
+      if (hosterId == null) {
+        Logger.debug('Host ID not found');
+        emit(const EventError('User ID not found'));
+        return;
+      }
+      
+      if (event.bannerImage == null && event.eventEntity.bannerImage == null) {
+        Logger.debug('No banner image provided');
         emit(const EventError('Banner image is required'));
         return;
       }
       
-      // Create event with media
       await createEventUseCase(event.eventEntity);
-      
+      Logger.debug('Event created successfully');
       emit(EventSuccess());
     } catch (e) {
+      Logger.error('Event creation failed', e);
       emit(EventError(e.toString()));
     }
   }
@@ -108,18 +123,11 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
       final categories = await _categoriesUseCase();
       
       if (categories.isEmpty) {
-        emit(const CategoriesLoaded(categories: [], eventTypes: []));
+        emit(const CategoriesLoaded(categories: []));
         return;
       }
       
-      emit(CategoriesLoaded(
-        categories: categories,
-        eventTypes: categories
-            .expand((category) => category.eventTypes)
-            .map((type) => type.name)
-            .toSet()
-            .toList(),
-      ));
+      emit(CategoriesLoaded(categories: categories));
     } catch (e) {
       emit(EventError(e.toString()));
     }

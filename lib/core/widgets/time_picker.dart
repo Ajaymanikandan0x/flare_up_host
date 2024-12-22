@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 
-class ScrollTimePickerWheel extends StatefulWidget {
-  const ScrollTimePickerWheel({super.key});
+class TimeField extends StatefulWidget {
+  final TextEditingController controller;
+  final String? label;
+  final Widget? prefixIcon;
+  final Function(String)? onChanged;
+  final String? Function(String?)? validator;
+
+  const TimeField({
+    super.key, 
+    required this.controller, 
+    this.label, 
+    this.prefixIcon,
+    this.onChanged,
+    this.validator,
+  });
 
   @override
-  _ScrollTimePickerWheelState createState() => _ScrollTimePickerWheelState();
+  _TimeFieldState createState() => _TimeFieldState();
 }
 
-class _ScrollTimePickerWheelState extends State<ScrollTimePickerWheel> {
+class _TimeFieldState extends State<TimeField> {
   final FixedExtentScrollController _hourController =
       FixedExtentScrollController();
   final FixedExtentScrollController _minuteController =
@@ -53,6 +66,16 @@ class _ScrollTimePickerWheelState extends State<ScrollTimePickerWheel> {
         _selectedTime = _selectedTime.copyWith(hour: currentHour + 12);
       }
     });
+  }
+
+  void _updateControllerValue() {
+    final hour = _selectedTime.hour;
+    final minute = _selectedTime.minute;
+    final formattedTime = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+    widget.controller.text = formattedTime;
+    if (widget.onChanged != null) {
+      widget.onChanged!(formattedTime);
+    }
   }
 
   @override
