@@ -3,10 +3,9 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/app_error.dart';
 import '../../../../core/network/api_response.dart';
 import '../../../../core/network/base_api_client.dart';
-import '../../../../core/network/network_service.dart';
-import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/utils/cloudinary_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/utils/validation.dart';
 import '../models/category_model.dart';
 import '../models/event_model.dart';
 import '../models/host_event_model.dart';
@@ -16,20 +15,46 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   final CloudinaryService _mediaUploader;
 
   EventRemoteDataSourceImpl(
-    NetworkService networkService,
-    SecureStorageService storageService,
+    super.networkService,
+    super.storageService,
     this._mediaUploader,
-  ) : super(networkService, storageService);
+  );
 
   @override
-  Future<ApiResponse> createEvent(EventModel event, {File? bannerImage, File? promoVideo}) async {
+  Future<ApiResponse> createEvent(
+    EventModel event, {
+    File? bannerImage,
+    File? promoVideo,
+  }) async {
     try {
-      final eventData = await _prepareEventData(event, bannerImage: bannerImage, promoVideo: promoVideo);
+      // Validate files first
+      if (bannerImage == null) {
+        throw AppError(
+          userMessage: 'Banner image is required',
+          type: ErrorType.validation,
+        );
+      }
+      
+      if (!await _validateMediaFiles(bannerImage, promoVideo)) {
+        throw AppError(
+          userMessage: 'Invalid media files',
+          type: ErrorType.validation,
+        );
+      }
+
+      final eventData = await _prepareEventData(
+        event,
+        bannerImage: bannerImage,
+        promoVideo: promoVideo,
+      );
+      
+      final options = await getRequestOptions();
       
       return await makeRequest(
         request: () => networkService.dio.post(
           '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.createEvent}',
           data: eventData,
+          options: options,
         ),
         successMessage: 'Event created successfully',
         errorMessage: 'Failed to create event',
@@ -38,6 +63,20 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
       Logger.error('Create event error:', e);
       rethrow;
     }
+  }
+
+  Future<bool> _validateMediaFiles(File bannerImage, File? promoVideo) async {
+    // Validate banner image
+    final imageValidation = await FormValidator.validateImage(bannerImage);
+    if (imageValidation != null) return false;
+
+    // Validate promo video if provided
+    if (promoVideo != null) {
+      final videoValidation = await FormValidator.validateVideo(promoVideo);
+      if (videoValidation != null) return false;
+    }
+
+    return true;
   }
 
   @override
@@ -128,25 +167,44 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   @override
   Future<ApiResponse<List<CategoryModel>>> getEventCategories() async {
     try {
-      const endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.eventCategory}';
+      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.eventCategory}';
+      
+      final response = await networkService.dio.get(
+        endpoint,
+        options: await getRequestOptions(),
+      );
 
-      return await makeRequest<List<CategoryModel>>(
-        request: () => networkService.dio.get(endpoint),
-        successMessage: 'Categories fetched successfully',
-        errorMessage: 'Failed to fetch categories',
-        transform: (data) {
-          if (data is! List) {
-            throw AppError(
-              userMessage: 'Server returned invalid data format',
-              type: ErrorType.server,
-            );
-          }
-          return data.map((json) => CategoryModel.fromJson(json)).toList();
-        },
+      if (response.statusCode != 200) {
+        throw AppError(
+          userMessage: 'Failed to fetch categories',
+          technicalMessage: 'Status: ${response.statusCode}, Data: ${response.data}',
+          type: ErrorType.server,
+        );
+      }
+
+      if (response.data == null || (response.data is List && response.data.isEmpty)) {
+        return ApiResponse(
+          success: true,
+          message: 'No categories available',
+          data: [],
+        );
+      }
+
+      final categories = (response.data as List)
+          .map((json) => CategoryModel.fromJson(json))
+          .toList();
+      
+      return ApiResponse(
+        success: true,
+        message: 'Categories fetched successfully',
+        data: categories,
       );
     } catch (e) {
-      Logger.error('Get categories error:', e);
-      rethrow;
+      throw AppError(
+        userMessage: 'Failed to fetch categories',
+        technicalMessage: e.toString(),
+        type: ErrorType.server,
+      );
     }
   }
 

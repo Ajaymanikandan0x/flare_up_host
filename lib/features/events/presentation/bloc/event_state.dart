@@ -3,20 +3,20 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/host_event_entite.dart';
 
-abstract class EventState extends Equatable {
-  const EventState();
+abstract class EventBlocState extends Equatable {
+  const EventBlocState();
 
   @override
   List<Object?> get props => [];
 }
 
-class EventInitial extends EventState {}
+class EventInitial extends EventBlocState {}
 
-class EventLoading extends EventState {}
+class EventLoading extends EventBlocState {}
 
-class EventSuccess extends EventState {}
+class EventSuccess extends EventBlocState {}
 
-class EventError extends EventState {
+class EventError extends EventBlocState {
   final String message;
 
   const EventError(this.message);
@@ -25,7 +25,7 @@ class EventError extends EventState {
   List<Object?> get props => [message];
 }
 
-class CategoriesLoaded extends EventState {
+class CategoriesLoaded extends EventBlocState {
   final List<CategoryEntity> categories;
   final List<String> eventTypes;
 
@@ -38,9 +38,9 @@ class CategoriesLoaded extends EventState {
   List<Object?> get props => [categories, eventTypes];
 }
 
-class EventMediaUploading extends EventState {}
+class EventMediaUploading extends EventBlocState {}
 
-class EventMediaUploadSuccess extends EventState {
+class EventMediaUploadSuccess extends EventBlocState {
   final String url;
 
   const EventMediaUploadSuccess(this.url);
@@ -49,7 +49,7 @@ class EventMediaUploadSuccess extends EventState {
   List<Object?> get props => [url];
 }
 
-class HostEventsLoaded extends EventState {
+class HostEventsLoaded extends EventBlocState {
   final List<HostEventEntities> events;
 
   const HostEventsLoaded(this.events);

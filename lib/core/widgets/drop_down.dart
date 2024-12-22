@@ -2,21 +2,23 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 
 class DropDown extends StatelessWidget {
-  final GlobalKey dropDownKey;
+  final GlobalKey<DropdownSearchState> dropDownKey;
   final List<String> items;
   final String? selectedItem;
   final String hint;
   final String? errorText;
-  final Function(String?)? onChanged;
+  final Widget? prefixIcon;
+  final Function(String?) onChanged;
 
   const DropDown({
-    super.key,
     required this.dropDownKey,
     required this.items,
-    this.selectedItem,
+    required this.selectedItem,
     required this.hint,
+    required this.onChanged,
     this.errorText,
-    this.onChanged,
+    this.prefixIcon,
+    super.key,
   });
 
   @override
@@ -35,6 +37,7 @@ class DropDown extends StatelessWidget {
           labelText: hint,
           errorText: errorText,
           border: const OutlineInputBorder(),
+          prefixIcon: prefixIcon,
         ),
       ),
     );

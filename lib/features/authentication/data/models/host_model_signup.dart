@@ -1,4 +1,4 @@
-
+import '../../../../core/error/app_error.dart';
 import '../../domain/entities/user_entities_signup.dart';
 
 class HostModelSignup {
@@ -17,23 +17,33 @@ class HostModelSignup {
   });
 
   factory HostModelSignup.fromJson(Map<String, dynamic> json) {
-    // For OTP response, return input data
-    if (json.containsKey('message')) {
+    try {
+      // For OTP response, return input data
+      if (json.containsKey('message')) {
+        return HostModelSignup(
+          userName: json['username']?.toString() ?? '',
+          fullName: json['fullname']?.toString() ?? '',
+          role: json['role']?.toString() ?? '',
+          email: json['email']?.toString() ?? '',
+          password: json['password']?.toString() ?? '',
+        );
+      }
+      
+      // For regular response
       return HostModelSignup(
-        userName: json['username'] ?? '',
-        fullName: json['fullname'] ?? '',
-        role: json['role'] ?? '',
-        email: json['email'] ?? '',
-        password: json['password'] ?? '',
+        userName: json['username']?.toString() ?? '',
+        fullName: json['fullname']?.toString() ?? '',
+        role: json['role']?.toString() ?? '',
+        email: json['email']?.toString() ?? '',
+        password: json['password']?.toString() ?? '',
+      );
+    } catch (e) {
+      throw AppError(
+        userMessage: 'Failed to process registration data',
+        technicalMessage: e.toString(),
+        type: ErrorType.businessLogic,
       );
     }
-    return HostModelSignup(
-      userName: json['username'],
-      fullName: json['fullname'],
-      role: json['role'],
-      email: json['email'],
-      password: json['password'],
-    );
   }
 
   Map<String, dynamic> toJson() {

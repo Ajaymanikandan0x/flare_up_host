@@ -110,7 +110,18 @@ class AppDrawer extends StatelessWidget {
                 child: DrawerListTile(
                   icon: FontAwesomeIcons.userPen,
                   title: 'Edit Profile',
-                  onTap: () => Navigator.pushNamed(context, AppRouts.hostProfile),
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRouts.hostProfile),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.horizontalPadding,
+                ),
+                child: DrawerListTile(
+                  icon: FontAwesomeIcons.locationDot,
+                  title: 'Location',
+                  onTap: () => Navigator.pushNamed(context, AppRouts.location),
                 ),
               ),
               // Theme Toggle

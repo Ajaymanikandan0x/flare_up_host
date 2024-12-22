@@ -71,6 +71,7 @@ class EventModel extends EventEntity {
       'banner_image': bannerImage,
       'promo_video': promoVideo,
       'host_id': hostId,
+   
     };
   }
 

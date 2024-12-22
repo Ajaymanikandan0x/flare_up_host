@@ -1,23 +1,22 @@
-import 'package:flare_up_host/features/events/presentation/bloc/event_event.dart';
-import 'package:flare_up_host/features/events/presentation/bloc/event_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/error/app_error.dart';
 import '../../../../core/storage/secure_storage_service.dart';
-import '../../../../core/utils/logger.dart';
 import '../../domain/usecases/create_event_usecase.dart';
 import '../../domain/usecases/host_event_usecase.dart';
 import '../../domain/usecases/update_event_usecase.dart';
 import '../../domain/usecases/upload_event_media_usecase.dart';
 import '../../domain/usecases/category_usecase.dart';
+import 'event_event.dart';
+import 'event_state.dart';
 
-class EventBloc extends Bloc<EventEvent, EventState> {
+
+class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
   final CreateEventUseCase createEventUseCase;
   final UpdateEventUseCase updateEventUseCase;
   final GetHostEventsUseCase getHostEventsUseCase;
   final UploadEventMediaUseCase uploadEventMediaUseCase;
   final SecureStorageService storageService;
-  final CategoriesUseCase _categoriesUseCase;
+  final CategoriesUseCase _categoriesUseCase;   
 
   EventBloc({
     required this.createEventUseCase,
@@ -37,11 +36,20 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   Future<void> _onCreateEvent(
     CreateEventEvent event,
-    Emitter<EventState> emit,
+    Emitter<EventBlocState> emit,
   ) async {
     try {
       emit(EventLoading());
+      
+      // Validate media files
+      if (event.bannerImage == null) {
+        emit(const EventError('Banner image is required'));
+        return;
+      }
+      
+      // Create event with media
       await createEventUseCase(event.eventEntity);
+      
       emit(EventSuccess());
     } catch (e) {
       emit(EventError(e.toString()));
@@ -50,7 +58,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   Future<void> _onUpdateEvent(
     UpdateEventEvent event,
-    Emitter<EventState> emit,
+    Emitter<EventBlocState> emit,
   ) async {
     try {
       emit(EventLoading());
@@ -63,7 +71,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   Future<void> _onFetchHostEvents(
     FetchHostEventsEvent event,
-    Emitter<EventState> emit,
+    Emitter<EventBlocState> emit,
   ) async {
     try {
       emit(EventLoading());
@@ -76,7 +84,7 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   Future<void> _onUploadEventMedia(
     UploadEventMediaEvent event,
-    Emitter<EventState> emit,
+    Emitter<EventBlocState> emit,
   ) async {
     try {
       emit(EventMediaUploading());
@@ -93,30 +101,27 @@ class EventBloc extends Bloc<EventEvent, EventState> {
 
   Future<void> _onFetchCategories(
     FetchCategoriesEvent event,
-    Emitter<EventState> emit,
+    Emitter<EventBlocState> emit,
   ) async {
     try {
       emit(EventLoading());
       final categories = await _categoriesUseCase();
       
-      final eventTypes = categories.isEmpty 
-          ? <String>[] 
-          : categories
-              .expand((category) => category.eventTypes)
-              .map((type) => type.name)
-              .toSet()
-              .toList();
+      if (categories.isEmpty) {
+        emit(const CategoriesLoaded(categories: [], eventTypes: []));
+        return;
+      }
       
       emit(CategoriesLoaded(
         categories: categories,
-        eventTypes: eventTypes,
+        eventTypes: categories
+            .expand((category) => category.eventTypes)
+            .map((type) => type.name)
+            .toSet()
+            .toList(),
       ));
     } catch (e) {
-      if (e is AppError) {
-        emit(EventError(e.userMessage));
-      } else {
-        emit(EventError('Failed to load categories'));
-      }
+      emit(EventError(e.toString()));
     }
   }
 }

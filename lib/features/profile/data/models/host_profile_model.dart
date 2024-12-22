@@ -1,4 +1,3 @@
-
 import '../../domain/entities/host_profile_entity.dart';
 
 class HostProfileModel {

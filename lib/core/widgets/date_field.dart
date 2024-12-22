@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../theme/app_palette.dart';
+import '../theme/text_theme.dart';
+
 class DateField extends StatefulWidget {
   final TextEditingController controller;
-  const DateField({super.key, required this.controller});
+  final String? label;
+  final Widget? prefixIcon;
+  const DateField({
+    super.key, 
+    required this.controller, 
+    this.label, 
+    this.prefixIcon
+  });
 
   @override
   _DateFieldState createState() => _DateFieldState();
@@ -12,25 +22,37 @@ class DateField extends StatefulWidget {
 class _DateFieldState extends State<DateField> {
   @override
   Widget build(BuildContext context) {
-    return PrimaryContainer(
-      radius: 10,
-      child: TextFormField(
-        readOnly: true,
-        style: const TextStyle(fontSize: 16, color: Colors.white),
-        controller: widget.controller,
-        textAlignVertical: TextAlignVertical.center,
-        onTap: () => _selectDate(context),
-        decoration: const InputDecoration(
-          contentPadding: EdgeInsets.only(left: 20, right: 20, bottom: 3),
-          border: InputBorder.none,
-          filled: false,
-          focusedBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          disabledBorder: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          hintText: 'DD/MM/YYYY',
-          suffixIcon: Icon(Icons.calendar_today),
-          hintStyle: TextStyle(fontSize: 14, color: Colors.grey),
+    final theme = Theme.of(context);
+    
+    return TextFormField(
+      controller: widget.controller,
+      readOnly: true,
+      style: AppTextStyles.primaryTextTheme(),
+      onTap: () => _selectDate(context),
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: 'DD/MM/YYYY',
+        prefixIcon: widget.prefixIcon,
+        filled: true,
+        fillColor: theme.cardColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(
+            color: theme.brightness == Brightness.dark
+                ? AppPalette.darkDivider
+                : Colors.grey.shade300,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppPalette.gradient2, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 23,
+          horizontal: 23,
         ),
       ),
     );

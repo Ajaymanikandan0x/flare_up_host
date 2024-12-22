@@ -43,12 +43,6 @@ class EventRepositoryImpl implements EventRepositoryDomain {
     await _remoteDataSource.createEvent(eventModel);
   }
 
-  @override
-  Future<List<HostEventEntities>> getHostEvents(String hostId) async {
-    final ApiResponse<List<HostEventModel>> response =
-        await _remoteDataSource.getHostEvents(int.parse(hostId));
-    return response.data!.map((model) => model.toEntity()).toList();
-  }
 
   @override
   Future<EventEntity> getEventById(String eventId) async {
@@ -106,7 +100,7 @@ class EventRepositoryImpl implements EventRepositoryDomain {
   @override
   Future<List<CategoryEntity>> getCategories() async {
     final response = await _remoteDataSource.getEventCategories();
-    return response.data!.map((model) => model.toEntity()).toList();
+    return response.data?.map((model) => model.toEntity()).toList() ?? [];
   }
 
   @override
@@ -117,5 +111,11 @@ class EventRepositoryImpl implements EventRepositoryDomain {
       Logger.error('Upload event media error:', e);
       rethrow;
     }
+  }
+  
+  @override
+  Future<List<HostEventEntities>> getHostEvents(String hostId) {
+    // TODO: implement getHostEvents
+    throw UnimplementedError();
   }
 }
