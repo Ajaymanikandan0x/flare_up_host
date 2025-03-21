@@ -19,6 +19,7 @@ import '../widgets/add_event/payment_section.dart';
 import '../widgets/add_event/schedule_section.dart';
 import '../widgets/add_event/video_section.dart';
 import 'approval.dart';
+import '../../../../core/utils/logger.dart';
 
 class AddEventScreen extends StatefulWidget {
   const AddEventScreen({super.key});
@@ -219,11 +220,20 @@ class _AddEventScreenState extends State<AddEventScreen> {
   }
 
   void _handleFormSubmission() async {
+    Logger.debug(
+        'Form submission - Category: ${selectedCategoryController.text}');
+    Logger.debug('Form submission - Type: ${selectedTypeController.text}');
+
     if (!formKey.currentState!.validate()) {
       return;
     }
 
     try {
+      final hostId = await context.read<EventBloc>().storageService.getUserId();
+      if (hostId == null) {
+        throw Exception('User ID not found');
+      }
+
       // Validate banner image
       if (image == null || bannerImageUrl == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,7 +277,6 @@ class _AddEventScreenState extends State<AddEventScreen> {
               eventRegistrationDeadlineTimeController.text,
             ) ??
             DateTime.now().add(const Duration(hours: 1)),
-
         participantCapacity: int.parse(eventParticipantCapacityController.text),
         latitude: latitude!,
         longitude: longitude!,
@@ -275,7 +284,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
         city: eventCityController.text,
         state: eventStateController.text,
         country: eventCountryController.text,
-        hostId: 2, // Using the hostId from logs
+        hostId: int.parse(hostId),
         bannerImage: bannerImageUrl,
         promoVideo: promoVideoUrl,
       );
@@ -284,7 +293,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
       // Add event creation event to bloc
       context.read<EventBloc>().add(CreateEventEvent(eventData, image!, video));
     } catch (e) {
-      print('[ERROR] Form submission error: $e');
+      Logger.error('Form submission error:', e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );

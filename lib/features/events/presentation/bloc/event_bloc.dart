@@ -3,6 +3,7 @@ import 'package:flare_up_host/features/events/presentation/bloc/event_state.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/storage/secure_storage_service.dart';
+import '../../domain/entities/category_entity.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../../domain/usecases/create_event_usecase.dart';
 import '../../domain/usecases/host_event_usecase.dart';
@@ -10,7 +11,6 @@ import '../../domain/usecases/update_event_usecase.dart';
 import '../../domain/usecases/upload_event_media_usecase.dart';
 import '../../domain/usecases/category_usecase.dart';
 import 'event_event.dart';
-import 'event_state.dart';
 import '../../../../core/utils/logger.dart';
 
 class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
@@ -79,6 +79,106 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
       } catch (e) {
         emit(EventVideoUploadFailure(e.toString()));
       }
+    });
+    on<SelectCategoryEvent>((event, emit) {
+      Logger.debug('Processing category selection: ${event.categoryName}');
+      try {
+        if (event.categories.isEmpty) {
+          Logger.debug('Categories list is empty in SelectCategoryEvent');
+          return;
+        }
+
+        final category = event.categories.firstWhere(
+          (c) => c.name == event.categoryName,
+          orElse: () => CategoryEntity(
+            id: 0,
+            name: '',
+            description: '',
+            status: '',
+            updatedAt: DateTime.now(),
+            eventTypes: [],
+          ),
+        );
+
+        final eventTypes =
+            category.eventTypes.map((type) => type.name).toList();
+
+        // Use ID in controller but keep name for display
+        event.categoryController.text = category.id.toString();
+
+        // Set a default type if possible
+        if (category.eventTypes.isNotEmpty &&
+            event.typeController.text.isEmpty) {
+          event.typeController.text = category.eventTypes.first.id.toString();
+        } else if (event.typeController.text.isEmpty) {
+          // Fallback to default type ID
+          event.typeController.text = "1";
+        }
+
+        Logger.debug(
+            'Updated category controller to: ${event.categoryController.text}');
+        Logger.debug(
+            'Updated type controller to: ${event.typeController.text}');
+
+        emit(CategorySelected(
+          categoryName: event.categoryName,
+          eventTypes: eventTypes,
+          categories: event.categories,
+          categoryController: event.categoryController,
+          typeController: event.typeController,
+        ));
+      } catch (e) {
+        Logger.error('Error during category selection:', e);
+        emit(EventError(e.toString()));
+      }
+    });
+    on<SelectTypeEvent>((event, emit) {
+      Logger.debug('Processing type selection: ${event.typeName}');
+      try {
+        // Validate the type ID
+        final typeId = event.typeController.text;
+        if (int.tryParse(typeId) == null) {
+          Logger.debug('Invalid type ID in controller: $typeId');
+          event.typeController.text = "1";
+          Logger.debug('Fixed type ID to: 1');
+        }
+
+        // Emit updated state preserving the current category selection
+        if (state is CategorySelected) {
+          final categoryState = state as CategorySelected;
+
+          // Also validate the category ID while we're here
+          final categoryId = categoryState.categoryController.text;
+          if (int.tryParse(categoryId) == null) {
+            Logger.debug('Invalid category ID: $categoryId');
+            // Try to find a valid category ID
+            if (categoryState.categories.isNotEmpty) {
+              categoryState.categoryController.text =
+                  categoryState.categories.first.id.toString();
+              Logger.debug(
+                  'Fixed category ID to: ${categoryState.categoryController.text}');
+            }
+          }
+
+          emit(CategorySelected(
+            categoryName: categoryState.categoryName,
+            eventTypes: categoryState.eventTypes,
+            categories: categoryState.categories,
+            selectedType: event.typeName, // Store name for display only
+            categoryController: categoryState.categoryController,
+            typeController:
+                event.typeController, // This should now have a valid ID
+          ));
+        }
+      } catch (e) {
+        Logger.error('Error during type selection:', e);
+        emit(EventError(e.toString()));
+      }
+    });
+    on<SelectDateEvent>(_onSelectDate);
+    on<CleanupDropdownEvent>((event, emit) {
+      Logger.debug('Cleaning up dropdown state');
+      emit(EventCleanupState());
     });
   }
 
@@ -216,13 +316,54 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
       final categories = await _categoriesUseCase();
 
       if (categories.isEmpty) {
-        emit(const CategoriesLoaded(categories: []));
+        emit(CategoriesLoaded(categories: []));
         return;
       }
 
       emit(CategoriesLoaded(categories: categories));
     } catch (e) {
       emit(EventError(e.toString()));
+    }
+  }
+
+  void _onSelectDate(SelectDateEvent event, Emitter<EventBlocState> emit) {
+    if (state is DateSelectionState) {
+      final currentState = state as DateSelectionState;
+
+      switch (event.dateType) {
+        case 'start':
+          emit(DateSelectionState(
+            startDate: event.selectedDate,
+            endDate: currentState.endDate,
+            registrationDeadline: currentState.registrationDeadline,
+            dateType: event.dateType,
+          ));
+          break;
+        case 'end':
+          emit(DateSelectionState(
+            startDate: currentState.startDate,
+            endDate: event.selectedDate,
+            registrationDeadline: currentState.registrationDeadline,
+            dateType: event.dateType,
+          ));
+          break;
+        case 'registration':
+          emit(DateSelectionState(
+            startDate: currentState.startDate,
+            endDate: currentState.endDate,
+            registrationDeadline: event.selectedDate,
+            dateType: event.dateType,
+          ));
+          break;
+      }
+    } else {
+      emit(DateSelectionState(
+        dateType: event.dateType,
+        startDate: event.dateType == 'start' ? event.selectedDate : null,
+        endDate: event.dateType == 'end' ? event.selectedDate : null,
+        registrationDeadline:
+            event.dateType == 'registration' ? event.selectedDate : null,
+      ));
     }
   }
 }

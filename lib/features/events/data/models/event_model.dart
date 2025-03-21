@@ -54,8 +54,8 @@ class EventModel extends EventEntity {
     return {
       'title': name,
       'description': description,
-      'category': int.tryParse(category) ?? 1,
-      'type': int.tryParse(type) ?? 1,
+      'category': int.tryParse(category),
+      'type': int.tryParse(type),
       'is_payment_required': isPaymentRequired,
       'ticket_price': ticketPrice,
       'latitude': double.parse(latitude.toStringAsFixed(6)),

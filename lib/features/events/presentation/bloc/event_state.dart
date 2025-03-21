@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/host_event_entite.dart';
@@ -29,13 +30,15 @@ class EventError extends EventBlocState {
 
 class CategoriesLoaded extends EventBlocState {
   final List<CategoryEntity> categories;
+  final List<String> eventTypes;
 
   const CategoriesLoaded({
     required this.categories,
+    this.eventTypes = const [],
   });
 
   @override
-  List<Object?> get props => [categories];
+  List<Object?> get props => [categories, eventTypes];
 }
 
 class EventMediaUploading extends EventBlocState {}
@@ -144,4 +147,64 @@ class ImageSelectionState extends EventBlocState {
 
   @override
   List<Object?> get props => [selectedImage, isUploading, url];
+}
+
+class CategorySelected extends EventBlocState {
+  final String categoryName;
+  final List<String> eventTypes;
+  final List<CategoryEntity> categories;
+  final String? selectedType;
+  final TextEditingController categoryController;
+  final TextEditingController typeController;
+
+  const CategorySelected({
+    required this.categoryName,
+    required this.eventTypes,
+    required this.categories,
+    this.selectedType,
+    required this.categoryController,
+    required this.typeController,
+  });
+
+  @override
+  List<Object?> get props => [
+        categoryName,
+        eventTypes,
+        categories,
+        selectedType,
+        categoryController,
+        typeController
+      ];
+}
+
+class TypeSelected extends EventBlocState {
+  final String typeName;
+
+  const TypeSelected(this.typeName);
+
+  @override
+  List<Object?> get props => [typeName];
+}
+
+class DateSelectionState extends EventBlocState {
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final DateTime? registrationDeadline;
+  final String dateType;
+
+  const DateSelectionState({
+    this.startDate,
+    this.endDate,
+    this.registrationDeadline,
+    required this.dateType,
+  });
+
+  @override
+  List<Object?> get props =>
+      [startDate, endDate, registrationDeadline, dateType];
+}
+
+class EventCleanupState extends EventBlocState {
+  @override
+  List<Object?> get props => [];
 }

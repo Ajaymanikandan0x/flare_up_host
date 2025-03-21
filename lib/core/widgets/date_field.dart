@@ -1,9 +1,13 @@
 import 'package:flare_up_host/core/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../features/events/presentation/bloc/event_bloc.dart';
+import '../../features/events/presentation/bloc/event_event.dart';
 import '../theme/app_palette.dart';
 import '../theme/text_theme.dart';
+
 
 class DateField extends StatefulWidget {
   final TextEditingController controller;
@@ -11,6 +15,7 @@ class DateField extends StatefulWidget {
   final Widget? prefixIcon;
   final Function(String)? onChanged;
   final String? Function(String?)? validator;
+  final String dateType;
   const DateField({
     super.key,
     required this.controller,
@@ -18,6 +23,7 @@ class DateField extends StatefulWidget {
     this.prefixIcon,
     this.onChanged,
     this.validator,
+    required this.dateType,
   });
 
   @override
@@ -89,9 +95,7 @@ class _DateFieldState extends State<DateField> {
           }
 
           // Use responsive max date based on screen size
-          final maxYears = Responsive.isTablet
-              ? 50
-              : 25;
+          final maxYears = Responsive.isTablet ? 50 : 25;
           final maxDate = today.add(Duration(days: 365 * maxYears));
           if (selected.isAfter(maxDate)) {
             return 'Date cannot be more than $maxYears years in the future';
@@ -119,10 +123,16 @@ class _DateFieldState extends State<DateField> {
     );
 
     if (pickedDate != null && mounted) {
-      setState(() {
-        widget.controller.text = DateFormat('dd/MM/yyyy').format(pickedDate);
-      });
-      widget.onChanged?.call(widget.controller.text);
+      final formattedDate = DateFormat('dd/MM/yyyy').format(pickedDate);
+      widget.controller.text = formattedDate;
+
+      // Dispatch event to bloc
+      context.read<EventBloc>().add(SelectDateEvent(
+            selectedDate: pickedDate,
+            dateType: widget.dateType,
+          ));
+
+      widget.onChanged?.call(formattedDate);
     }
   }
 }

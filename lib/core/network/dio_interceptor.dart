@@ -31,21 +31,23 @@ class AuthInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) async {
-    // Only attempt token refresh if we get a 401 status code
     if (response.statusCode == 401) {
       try {
+        Logger.debug('Attempting to refresh token...');
         final success = await _refreshToken();
+
         if (success) {
-          // Retry the request with the new access token
           final newToken = await storageService.getAccessToken();
           if (newToken != null) {
-            response.requestOptions.headers['Authorization'] =
-                'Bearer $newToken';
+            Logger.debug('Retrying request with new token');
             final cloneReq = await dio.request(
               response.requestOptions.path,
               options: Options(
                 method: response.requestOptions.method,
-                headers: response.requestOptions.headers,
+                headers: {
+                  ...response.requestOptions.headers,
+                  'Authorization': 'Bearer $newToken',
+                },
               ),
               data: response.requestOptions.data,
               queryParameters: response.requestOptions.queryParameters,
@@ -53,17 +55,24 @@ class AuthInterceptor extends Interceptor {
             return handler.resolve(cloneReq);
           }
         }
-        // If we reach here, token refresh failed
-        await _logout();
+
+        Logger.debug('Token refresh failed, handling session expiration');
+        await _handleSessionExpired();
         throw AppError(
           userMessage: ErrorMessages.sessionExpired,
           type: ErrorType.authentication,
         );
       } catch (e) {
-        await _logout();
-        throw AppError(
-          userMessage: ErrorMessages.sessionExpired,
-          type: ErrorType.authentication,
+        Logger.error('Error during token refresh:', e);
+        await _handleSessionExpired();
+        return handler.reject(
+          DioException(
+            requestOptions: response.requestOptions,
+            error: AppError(
+              userMessage: ErrorMessages.sessionExpired,
+              type: ErrorType.authentication,
+            ),
+          ),
         );
       }
     }
@@ -74,6 +83,7 @@ class AuthInterceptor extends Interceptor {
     final refreshToken = await storageService.getRefreshToken();
     if (refreshToken == null) {
       Logger.debug('No refresh token available');
+      await _handleSessionExpired();
       return false;
     }
 
@@ -82,40 +92,73 @@ class AuthInterceptor extends Interceptor {
         ApiEndpoints.baseUrl + ApiEndpoints.refreshToken,
         data: {'refresh_token': refreshToken},
         options: Options(
-          validateStatus: (status) => status! < 500,
+          validateStatus: (status) => true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
         ),
       );
 
+      Logger.debug('Refresh token response status: ${response.statusCode}');
+      Logger.debug('Refresh token response data: ${response.data}');
+
       if (response.statusCode == 200 && response.data != null) {
-        final newAccessToken = response.data['access_token'];
-        final newRefreshToken = response.data['refresh_token'];
+        final data = response.data;
+        final newAccessToken =
+            data['accessToken'] ?? data['access_token'] ?? data['token'];
+        final newRefreshToken =
+            data['refreshToken'] ?? data['refresh_token'] ?? refreshToken;
 
         if (newAccessToken != null) {
           final userId = await storageService.getUserId();
           if (userId != null) {
             await storageService.saveTokens(
               accessToken: newAccessToken,
-              refreshToken: newRefreshToken ?? refreshToken,
+              refreshToken: newRefreshToken,
               userId: userId,
             );
+            Logger.debug('Token refresh successful');
             return true;
           }
         }
-        Logger.debug('Token refresh failed: Invalid response data');
-        return false;
       }
 
-      Logger.debug('Token refresh failed with status: ${response.statusCode}');
-      return false;
+      if (response.statusCode != 200) {
+        if (response.statusCode == 400 || response.statusCode == 401) {
+          Logger.debug(
+              'Token refresh failed: ${response.data['error'] ?? 'Invalid token'}');
+          await _handleSessionExpired();
+        } else {
+          Logger.debug(
+              'Token refresh failed with status: ${response.statusCode}');
+          Logger.debug('Response data: ${response.data}');
+        }
+      }
+
+      if (response.statusCode == 200) {
+        Logger.debug('Got 200 response but failed to process tokens');
+      }
+
+      return response.statusCode == 200 &&
+          response.data != null &&
+          (response.data['accessToken'] != null ||
+              response.data['access_token'] != null);
     } catch (e) {
       Logger.error('Error refreshing token:', e);
+      await _handleSessionExpired();
       return false;
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _handleSessionExpired() async {
     await storageService.clearAll();
-    Navigator.of(NavigationService.navigatorKey.currentContext!)
-        .pushNamedAndRemoveUntil(AppRouts.signIn, (route) => false);
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRouts.signIn,
+        (route) => false,
+      );
+    }
   }
 }
