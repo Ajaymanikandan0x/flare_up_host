@@ -1,13 +1,21 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.android.libraries.mapsplatform.secrets-gradle-plugin" version "2.0.1"
+}
+
+def secretsProperties = new Properties()
+def secretsPropertiesFile = rootProject.file('secrets.properties')
+if (secretsPropertiesFile.exists()) {
+    println "Found secrets.properties file at: ${secretsPropertiesFile.absolutePath}"
+    secretsProperties.load(new FileInputStream(secretsPropertiesFile))
+    println "Loaded properties: ${secretsProperties}"
 }
 
 android {
     namespace = "com.example.flare_up_host"
-    compileSdk = 34
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -20,23 +28,63 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.flare_up_host"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Correct MultiDex configuration
+        multiDexEnabled true
+
+        // Verify that required properties exist
+        if (!secretsProperties.containsKey('MAPS_API_KEY') || secretsProperties.getProperty('MAPS_API_KEY').isEmpty()) {
+            println "WARNING: MAPS_API_KEY is missing or empty in secrets.properties file!"
+        }else {
+            println "it have the key"
+
+        }
+
+        if (!secretsProperties.containsKey('OAUTH_CLIENT_ID') || secretsProperties.getProperty('OAUTH_CLIENT_ID').isEmpty()) {
+            println "WARNING: OAUTH_CLIENT_ID is missing or empty in secrets.properties file!"
+        }
+    }
+
+    signingConfigs {
+        debug {
+            // Use default debug signing config
+        }
+        // Remove or comment out release config if not using a custom release key
+        // release {
+        //     // Configure your release signing config here when ready
+        // }
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders = [
+                MAPS_API_KEY: secretsProperties.getProperty('MAPS_API_KEY', ''),
+                OAUTH_CLIENT_ID: secretsProperties.getProperty('OAUTH_CLIENT_ID', '')
+            ]
+            signingConfig signingConfigs.debug
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            manifestPlaceholders = [
+                MAPS_API_KEY: secretsProperties.getProperty('MAPS_API_KEY', ''),
+                OAUTH_CLIENT_ID: secretsProperties.getProperty('OAUTH_CLIENT_ID', '')
+            ]
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+          
         }
     }
+}
+
+dependencies {
+    implementation "androidx.multidex:multidex:2.0.1"
+    implementation "com.google.android.gms:play-services-maps:19.1.0"
+    implementation "com.google.android.gms:play-services-auth:21.3.0"
 }
 
 flutter {

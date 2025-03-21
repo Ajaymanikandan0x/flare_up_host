@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flare_up_host/core/error/app_error.dart';
 
 import '../constants/api_constants.dart';
 import '../storage/secure_storage_service.dart';
@@ -27,27 +28,37 @@ class AuthInterceptor extends Interceptor {
     ResponseInterceptorHandler handler,
   ) async {
     if (response.statusCode == 401) {
-      // Access token might be expired, try to refresh it
-      final success = await _refreshToken();
-      if (success) {
-        // Retry the request with the new access token
-        final newToken = await storageService.getAccessToken();
-        if (newToken != null) {
-          response.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-          final cloneReq = await dio.request(
-            response.requestOptions.path,
-            options: Options(
-              method: response.requestOptions.method,
-              headers: response.requestOptions.headers,
-            ),
-            data: response.requestOptions.data,
-            queryParameters: response.requestOptions.queryParameters,
-          );
-          return handler.resolve(cloneReq);
+      try {
+        final success = await _refreshToken();
+        if (success) {
+          // Retry the request with the new access token
+          final newToken = await storageService.getAccessToken();
+          if (newToken != null) {
+            response.requestOptions.headers['Authorization'] =
+                'Bearer $newToken';
+            final cloneReq = await dio.request(
+              response.requestOptions.path,
+              options: Options(
+                method: response.requestOptions.method,
+                headers: response.requestOptions.headers,
+              ),
+              data: response.requestOptions.data,
+              queryParameters: response.requestOptions.queryParameters,
+            );
+            return handler.resolve(cloneReq);
+          }
         }
-      } else {
-        // Refresh token is also expired, log out the user
+
+        // If we reach here, token refresh failed
         await _logout();
+        throw AppError(
+            userMessage: ErrorMessages.sessionExpired,
+            type: ErrorType.authentication);
+      } catch (e) {
+        await _logout();
+        throw AppError(
+            userMessage: ErrorMessages.sessionExpired,
+            type: ErrorType.authentication);
       }
     }
     return handler.next(response);
@@ -81,7 +92,5 @@ class AuthInterceptor extends Interceptor {
   Future<void> _logout() async {
     await storageService.clearAll();
     // Redirect to login screen or emit a logout event
-
   }
 }
-

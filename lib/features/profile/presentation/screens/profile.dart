@@ -12,7 +12,6 @@ import '../bloc/host_profile_bloc.dart';
 import '../widgets/name_list_title.dart';
 import '../widgets/profile_shimmer.dart';
 
-
 class HostProfile extends StatelessWidget {
   const HostProfile({super.key});
 
@@ -60,17 +59,18 @@ class HostProfile extends StatelessWidget {
               );
             } else if (state is ProfileImageUploadSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile image updated successfully')),
+                const SnackBar(
+                    content: Text('Profile image updated successfully')),
               );
             }
           },
           builder: (context, state) {
-            if (state is HostProfileLoading || 
-                state is HostProfileInitial || 
+            if (state is HostProfileLoading ||
+                state is HostProfileInitial ||
                 state is ProfileImageUploading) {
               return const ProfileShimmer();
             }
-            
+
             if (state is HostProfileLoaded) {
               final user = state.user;
               return Column(
@@ -88,42 +88,42 @@ class HostProfile extends StatelessWidget {
                   ),
                   SizedBox(height: Responsive.spacingHeight),
                   TextButton(
-                    onPressed: () async {
-                      final bloc = context.read<HostProfileBloc>();
-                      File? imageFile = await ImagePickerService.pickImageFromGallery();
-                      if (imageFile != null && context.mounted) {
-                        bloc.add(UploadProfileImage(imageFile));
-                      }
-                    },
-                    child: Text(
-                      'Change Profile Photo',
-                      style: AppTextStyles.primaryTextTheme(
-                        fontSize: Responsive.subtitleFontSize,
-                      ),
-                    )
-                  ),
+                      onPressed: () async {
+                        final bloc = context.read<HostProfileBloc>();
+                        File? imageFile =
+                            await ImagePickerService.pickImageFromGallery();
+                        if (imageFile != null && context.mounted) {
+                          bloc.add(UploadProfileImage(imageFile));
+                        }
+                      },
+                      child: Text(
+                        'Change Profile Photo',
+                        style: AppTextStyles.primaryTextTheme(
+                          fontSize: Responsive.subtitleFontSize,
+                        ),
+                      )),
                   SizedBox(height: Responsive.spacingHeight * 2),
                   NameListTile(
-                    leading: 'UserName',
-                    title: user.username,
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRouts.editProf,
-                          arguments: {
-                            'field': user.username,
-                            'fieldType': 'UserName'
-                          });
-                    }),
+                      leading: 'UserName',
+                      title: user.username,
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRouts.editProf,
+                            arguments: {
+                              'field': user.username,
+                              'fieldType': 'UserName'
+                            });
+                      }),
                   minHeight,
                   NameListTile(
-                    leading: 'FullName',
-                    title: user.fullName,
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRouts.editProf,
-                          arguments: {
-                            'field': user.fullName,
-                            'fieldType': 'FullName'
-                          });
-                    }),
+                      leading: 'FullName',
+                      title: user.fullName,
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRouts.editProf,
+                            arguments: {
+                              'field': user.fullName,
+                              'fieldType': 'FullName'
+                            });
+                      }),
                   minHeight,
                   Text(
                     'Private Information',
@@ -133,26 +133,26 @@ class HostProfile extends StatelessWidget {
                   ),
                   SizedBox(height: Responsive.spacingHeight),
                   NameListTile(
-                    leading: 'Email',
-                    title: user.email,
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRouts.editProf,
-                          arguments: {
-                            'field': user.email,
-                            'fieldType': 'Email'
-                          });
-                    }),
+                      leading: 'Email',
+                      title: user.email,
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRouts.editProf,
+                            arguments: {
+                              'field': user.email,
+                              'fieldType': 'Email'
+                            });
+                      }),
                   minHeight,
                   NameListTile(
-                    leading: 'Phone',
-                    title: user.phoneNumber ?? 'Not set',
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRouts.editProf,
-                          arguments: {
-                            'field': user.phoneNumber ?? '',
-                            'fieldType': 'PhoneNumber'
-                          });
-                    }),
+                      leading: 'Phone',
+                      title: user.phoneNumber ?? 'Not set',
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRouts.editProf,
+                            arguments: {
+                              'field': user.phoneNumber ?? '',
+                              'fieldType': 'PhoneNumber'
+                            });
+                      }),
                   minHeight,
                   NameListTile(
                     leading: 'Role',
@@ -169,9 +169,7 @@ class HostProfile extends StatelessWidget {
                     Text('Error: ${state.message}'),
                     ElevatedButton(
                       onPressed: () => Navigator.pushReplacementNamed(
-                        context, 
-                        AppRouts.signIn
-                      ),
+                          context, AppRouts.signIn),
                       child: const Text('Return to Login'),
                     ),
                   ],

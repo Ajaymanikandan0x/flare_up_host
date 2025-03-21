@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flare_up_host/features/events/presentation/bloc/location/location_bloc.dart';
 
 import 'core/error/error_handler_service.dart';
 import 'core/network/dio_interceptor.dart';
@@ -25,13 +26,14 @@ import 'features/events/domain/usecases/update_event_usecase.dart';
 import 'features/events/domain/usecases/upload_event_media_usecase.dart';
 import 'features/events/presentation/bloc/event_bloc.dart';
 import 'features/profile/data/datasources/host_profile_remote_datasource.dart';
-import 'features/profile/data/repositories/profile_image_repository_impl.dart';
 import 'features/profile/data/repositories/host_profile_repository_impl.dart';
+import 'features/profile/data/repositories/profile_image_repository_impl.dart';
 import 'features/profile/domain/repositories/host_profile_repository.dart';
 import 'features/profile/domain/usecases/get_user_profile_usecase.dart';
 import 'features/profile/domain/usecases/update_user_profile_usecase.dart';
 import 'features/profile/domain/usecases/upload_profile_image_usecase.dart';
 import 'features/profile/presentation/bloc/host_profile_bloc.dart';
+
 
 class DependencyInjector {
   static final DependencyInjector _instance = DependencyInjector._internal();
@@ -75,11 +77,15 @@ class DependencyInjector {
   late final AppErrorHandlerService _errorHandlerService;
   late final CloudinaryService _mediaUploader;
 
+  // Add location dependencies
+  late final LocationBloc locationBloc;
+
   void setup() {
     _setupSharedServices();
     _setupAuthenticationDependencies();
     _setupHostProfileDependencies();
     _setupEventDependencies();
+    locationBloc = LocationBloc();
   }
 
   void _setupSharedServices() {
@@ -167,6 +173,7 @@ class DependencyInjector {
   }
 
   // Getters
+
   AuthBloc get authBloc => _authBloc;
   HostProfileBloc get hostProfileBloc => _hostProfileBloc;
   EventBloc get eventBloc => _eventBloc;

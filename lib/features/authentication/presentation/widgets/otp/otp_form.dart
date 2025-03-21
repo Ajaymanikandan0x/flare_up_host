@@ -98,11 +98,19 @@ class _OtpFormState extends State<OtpForm> {
       child: Form(
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(6, (index) {
-                return OtpBox(controller: controllers[index]);
-              }),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width * 0.00,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(6, (index) {
+                  return OtpBox(
+                    controller: controllers[index],
+                    isLastBox: index == 5,
+                  );
+                }),
+              ),
             ),
             const SizedBox(height: 100),
             BlocBuilder<AuthBloc, AuthState>(

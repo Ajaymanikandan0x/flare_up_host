@@ -36,7 +36,7 @@ class _ImageSectionState extends State<ImageSection> {
   Widget build(BuildContext context) {
     return BlocListener<EventBloc, EventBlocState>(
       listener: (context, state) {
-        if (state is EventMediaUploadSuccess) {
+        if (state is EventImageUploadSuccess) {
           widget.onImageSelected(MediaEntity(
             file: selectedImage,
             url: state.url,

@@ -1,3 +1,4 @@
+import 'package:flare_up_host/features/events/presentation/screens/add_event.dart';
 import 'package:flutter/material.dart';
 
 import '../../features/authentication/presentation/screens/forgot_password.dart';
@@ -7,13 +8,12 @@ import '../../features/authentication/presentation/screens/otp.dart';
 import '../../features/authentication/presentation/screens/reset_password.dart';
 import '../../features/authentication/presentation/screens/sign_in.dart';
 import '../../features/authentication/presentation/screens/sign_up.dart';
+import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/home/presentation/screens/home.dart';
+import '../../features/location/presentation/screens/location.dart';
 import '../../features/profile/presentation/screens/edit.dart';
 import '../../features/profile/presentation/screens/profile.dart';
-import '../../features/chat/presentation/screens/chat_screen.dart';
-import '../../features/location/presentation/screens/location_screen.dart';
 import '../widgets/bottom_navbar.dart';
-
 
 class AppRouts {
   static const logo = '/';
@@ -29,6 +29,7 @@ class AppRouts {
   static const chat = '/chat';
   static const location = '/location';
   static const appNav = '/app_nav';
+  static const editEvent = '/editEvent';
 
   static final Map<String, Widget Function(BuildContext)> routs = {
     logo: (_) => const Logo(),
@@ -44,6 +45,7 @@ class AppRouts {
     chat: (_) => const ChatScreen(),
     location: (_) => const LocationScreen(),
     appNav: (_) => const AppNav(),
+    editEvent: (_) => AddEventScreen(),
   };
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {

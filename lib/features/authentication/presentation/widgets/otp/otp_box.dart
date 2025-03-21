@@ -15,9 +15,12 @@ class OtpBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate responsive size
+    final size = MediaQuery.of(context).size.width * 0.15;
+
     return SizedBox(
-      height: 64.0,
-      width: 64.0,
+      height: size,
+      width: size,
       child: TextFormField(
         controller: controller,
         onChanged: (value) {
@@ -28,7 +31,8 @@ class OtpBox extends StatelessWidget {
           }
         },
         keyboardType: TextInputType.number,
-        textInputAction: isLastBox ? TextInputAction.done : TextInputAction.next,
+        textInputAction:
+            isLastBox ? TextInputAction.done : TextInputAction.next,
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),
           FilteringTextInputFormatter.digitsOnly,

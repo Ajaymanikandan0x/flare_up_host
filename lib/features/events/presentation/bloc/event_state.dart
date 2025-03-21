@@ -54,4 +54,20 @@ class HostEventsLoaded extends EventBlocState {
 
   @override
   List<Object?> get props => [events];
+}
+
+class EventImageUploadSuccess extends EventBlocState {
+  final String url;
+  const EventImageUploadSuccess(this.url);
+  
+  @override
+  List<Object> get props => [url];
+}
+
+class EventVideoUploadSuccess extends EventBlocState {
+  final String url;
+  const EventVideoUploadSuccess(this.url);
+  
+  @override
+  List<Object> get props => [url];
 } 

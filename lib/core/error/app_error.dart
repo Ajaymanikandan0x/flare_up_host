@@ -4,7 +4,7 @@ enum ErrorType {
   validation,
   server,
   unknown,
-  businessLogic
+  businessLogic, notFound
 }
 
 class AppError implements Exception {

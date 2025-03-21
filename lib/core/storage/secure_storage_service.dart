@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SecureStorageService {
   final FlutterSecureStorage _storage;
@@ -9,10 +10,6 @@ class SecureStorageService {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userIdKey = 'user_id';
-  static const String _cloudinaryApiKey = '366556954235497';
-  static const String _cloudinaryApiSecret = 'rXaQX1rtw1HLav_tisG2e1eRw8Y';
-  static const String _googleMapsApiKey =
-      'AIzaSyA_2QMkoy2q7hjzTJp_8OVjkwI6-Gqdtsg';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -22,38 +19,6 @@ class SecureStorageService {
     await _storage.write(key: _accessTokenKey, value: accessToken);
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
     await _storage.write(key: _userIdKey, value: userId);
-  }
-
-  Future<void> saveCloudinaryCredentials({
-    required String apiKey,
-    required String apiSecret,
-  }) async {
-    await _storage.write(key: _cloudinaryApiKey, value: apiKey);
-    await _storage.write(key: _cloudinaryApiSecret, value: apiSecret);
-  }
-
-  Future<void> saveGoogleMapsApiKey({
-    required String apiKey,
-  }) async {
-    await _storage.write(key: _googleMapsApiKey, value: apiKey);
-  }
-
-  Future<String?> getGoogleMapsApiKey() async {
-    return await _storage.read(key: _googleMapsApiKey);
-  }
-
-  Future<String?> getCloudinaryApiKey() async {
-    return await _storage.read(key: _cloudinaryApiKey);
-  }
-
-  Future<String?> getCloudinaryApiSecret() async {
-    return await _storage.read(key: _cloudinaryApiSecret);
-  }
-
-  Future<bool> hasCloudinaryCredentials() async {
-    final apiKey = await getCloudinaryApiKey();
-    final apiSecret = await getCloudinaryApiSecret();
-    return apiKey != null && apiSecret != null;
   }
 
   Future<String?> getAccessToken() async {
@@ -70,5 +35,21 @@ class SecureStorageService {
 
   Future<void> clearAll() async {
     await _storage.deleteAll();
+  }
+
+  Future<String?> getCloudinaryApiKey() async {
+    return dotenv.env['CLOUDINARY_API_KEY'];
+  }
+
+  Future<String?> getCloudinaryApiSecret() async {
+    return dotenv.env['CLOUDINARY_API_SECRET'];
+  }
+
+  Future<void> saveCloudinaryCredentials({
+    required String apiKey,
+    required String apiSecret,
+  }) async {
+    await _storage.write(key: 'cloudinary_api_key', value: apiKey);
+    await _storage.write(key: 'cloudinary_api_secret', value: apiSecret);
   }
 }

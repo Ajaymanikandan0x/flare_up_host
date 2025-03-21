@@ -2,7 +2,7 @@ import 'dart:io';
 
 import '../../../../core/utils/cloudinary_service.dart';
 import '../../../../core/utils/logger.dart';
-    
+
 class EventMediaUploaderImpl implements CloudinaryService {
   final CloudinaryService _cloudinaryService;
 
@@ -17,9 +17,4 @@ class EventMediaUploaderImpl implements CloudinaryService {
       rethrow;
     }
   }
-  
-  @override
-  Future<String?> uploadVideo(File videoFile) {
-    return _cloudinaryService.uploadVideo(videoFile);
-  }
-} 
+}

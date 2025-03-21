@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/app_error.dart';
 import '../../../../core/network/api_response.dart';
@@ -11,7 +12,8 @@ import '../models/event_model.dart';
 import '../models/host_event_model.dart';
 import 'event_remote_datasource.dart';
 
-class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteDataSource {
+class EventRemoteDataSourceImpl extends BaseApiClient
+    implements EventRemoteDataSource {
   final CloudinaryService _mediaUploader;
 
   EventRemoteDataSourceImpl(
@@ -40,7 +42,7 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
           type: ErrorType.validation,
         );
       }
-      
+
       if (bannerImage != null) {
         if (!await _validateMediaFiles(bannerImage, promoVideo)) {
           throw AppError(
@@ -55,13 +57,13 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
         bannerImage: bannerImage,
         promoVideo: promoVideo,
       );
-      
+
       Logger.debug('Prepared event data: $eventData');
       final options = await getRequestOptions();
-      
+
       return await makeRequest(
         request: () => networkService.dio.post(
-          '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.createEvent}',
+          '${ApiEndpoints.baseUrl}${ApiEndpoints.createEvent}',
           data: eventData,
           options: options,
         ),
@@ -106,28 +108,56 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   }
 
   @override
-  Future<ApiResponse<List<HostEventModel>>> getHostEvents(int hostId) async {
+  Future<ApiResponse<List<HostGetEventModel>>> getHostEvents(int hostId) async {
     try {
-      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.hosterEvent.replaceAll('hoster_id', hostId.toString())}';
+      final endpoint =
+          '${ApiEndpoints.baseUrl}${ApiEndpoints.hosterEvent.replaceAll('hoster_id', hostId.toString())}';
+      Logger.debug('Fetching host events from endpoint: $endpoint');
 
-      return await makeRequest<List<HostEventModel>>(
-        request: () => networkService.dio.get(endpoint),
-        successMessage: 'Events fetched successfully',
-        errorMessage: 'Failed to fetch events',
-        transform: (data) => (data['events'] as List)
-            .map((json) => HostEventModel.fromJson(json))
-            .toList(),
+      final options = await getRequestOptions();
+      final response = await networkService.dio.get(
+        endpoint,
+        options: options,
+      );
+
+      Logger.debug('Raw response data: ${response.data}');
+
+      if (response.data == null) {
+        return ApiResponse.success(
+          message: 'No events found',
+          data: [],
+        );
+      }
+
+      final eventsList = response.data as List;
+      Logger.debug('Events list length: ${eventsList.length}');
+
+      final mappedEvents = eventsList.map((json) {
+        Logger.debug('Processing event JSON: $json');
+        try {
+          return HostGetEventModel.fromJson(json);
+        } catch (e) {
+          Logger.error('Error parsing event: $json', e);
+          rethrow;
+        }
+      }).toList();
+
+      return ApiResponse.success(
+        message: 'Events fetched successfully',
+        data: mappedEvents,
       );
     } catch (e) {
       Logger.error('Get host events error:', e);
-      rethrow;
+      return ApiResponse.error(
+          message: 'Failed to fetch events: ${e.toString()}');
     }
   }
 
   @override
   Future<ApiResponse<EventModel>> getEventById(int eventId) async {
     try {
-      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.singleEvent.replaceAll('event_id', eventId.toString())}';
+      final endpoint =
+          '${ApiEndpoints.baseUrl}${ApiEndpoints.singleEvent.replaceAll('event_id', eventId.toString())}';
 
       return await makeRequest<EventModel>(
         request: () => networkService.dio.get(endpoint),
@@ -142,10 +172,13 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   }
 
   @override
-  Future<ApiResponse> updateEvent(int eventId, EventModel event, {File? bannerImage, File? promoVideo}) async {
+  Future<ApiResponse> updateEvent(int eventId, EventModel event,
+      {File? bannerImage, File? promoVideo}) async {
     try {
-      final eventData = await _prepareEventData(event, bannerImage: bannerImage, promoVideo: promoVideo);
-      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.editEvent.replaceAll('event_id', eventId.toString())}';
+      final eventData = await _prepareEventData(event,
+          bannerImage: bannerImage, promoVideo: promoVideo);
+      final endpoint =
+          '${ApiEndpoints.baseUrl}${ApiEndpoints.editEvent.replaceAll('event_id', eventId.toString())}';
 
       return await makeRequest(
         request: () => networkService.dio.put(endpoint, data: eventData),
@@ -161,7 +194,8 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   @override
   Future<ApiResponse> eventStatus(int eventId) async {
     try {
-      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.eventStatus.replaceAll('event_id', eventId.toString())}';
+      final endpoint =
+          '${ApiEndpoints.baseUrl}${ApiEndpoints.eventStatus.replaceAll('event_id', eventId.toString())}';
 
       return await makeRequest(
         request: () => networkService.dio.post(endpoint),
@@ -177,7 +211,7 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   @override
   Future<void> deleteEvent(int eventId) async {
     try {
-      final endpoint = '${ApiEndpoints.eventBaseUrl}/events/$eventId';
+      final endpoint = '${ApiEndpoints.baseUrl}/events/$eventId';
 
       await makeRequest(
         request: () => networkService.dio.delete(endpoint),
@@ -193,8 +227,8 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
   @override
   Future<ApiResponse<List<CategoryModel>>> getEventCategories() async {
     try {
-      final endpoint = '${ApiEndpoints.eventBaseUrl}${ApiEndpoints.eventCategory}';
-      
+      final endpoint = '${ApiEndpoints.baseUrl}${ApiEndpoints.eventCategory}';
+
       final response = await networkService.dio.get(
         endpoint,
         options: await getRequestOptions(),
@@ -203,12 +237,14 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
       if (response.statusCode != 200) {
         throw AppError(
           userMessage: 'Failed to fetch categories',
-          technicalMessage: 'Status: ${response.statusCode}, Data: ${response.data}',
+          technicalMessage:
+              'Status: ${response.statusCode}, Data: ${response.data}',
           type: ErrorType.server,
         );
       }
 
-      if (response.data == null || (response.data is List && response.data.isEmpty)) {
+      if (response.data == null ||
+          (response.data is List && response.data.isEmpty)) {
         return ApiResponse(
           success: true,
           message: 'No categories available',
@@ -219,7 +255,7 @@ class EventRemoteDataSourceImpl extends BaseApiClient implements EventRemoteData
       final categories = (response.data as List)
           .map((json) => CategoryModel.fromJson(json))
           .toList();
-      
+
       return ApiResponse(
         success: true,
         message: 'Categories fetched successfully',

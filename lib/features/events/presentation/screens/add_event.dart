@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flare_up_host/features/events/domain/entities/event_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_palette.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -115,8 +116,10 @@ class _AddEventScreenState extends State<AddEventScreen> {
               eventStartDateController: eventStartDateController,
               eventEndDateController: eventEndDateController,
               eventRegistrationDeadlineController:
-                  eventRegistrationDeadlineController, eventEndTimeController: eventEndTimeController,
-                  eventRegistrationDeadlineTimeController: eventRegistrationDeadlineTimeController,
+                  eventRegistrationDeadlineController,
+              eventEndTimeController: eventEndTimeController,
+              eventRegistrationDeadlineTimeController:
+                  eventRegistrationDeadlineTimeController,
             ),
             SizedBox(height: Responsive.spacingHeight * 2),
             CapacitySection(
@@ -221,13 +224,20 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
 
     try {
-      // Add debug logs
-      print('[DEBUG] Image file: $image');
-      print('[DEBUG] Banner image URL: $bannerImageUrl');
-      
+      // Validate banner image
       if (image == null || bannerImageUrl == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select and upload a banner image')),
+          const SnackBar(
+              content: Text('Please select and upload a banner image')),
+        );
+        return;
+      }
+
+      // Video is optional, but if selected must be uploaded
+      if (video != null && promoVideoUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Please wait for video upload to complete')),
         );
         return;
       }
@@ -239,21 +249,25 @@ class _AddEventScreenState extends State<AddEventScreen> {
         category: selectedCategoryController.text,
         type: selectedTypeController.text,
         isPaymentRequired: isPaymentRequired,
-        ticketPrice: isPaymentRequired ? double.parse(eventTicketPriceController.text) : 0,
+        ticketPrice: isPaymentRequired
+            ? double.parse(eventTicketPriceController.text)
+            : 0,
         startDateTime: _parseAndFormatDateTime(
-          eventStartDateController.text,
-          eventStartTimeController.text,
-        ) ?? DateTime.now(),
+              eventStartDateController.text,
+              eventStartTimeController.text,
+            ) ??
+            DateTime.now(),
         endDateTime: _parseAndFormatDateTime(
-          eventEndDateController.text,
-          eventEndTimeController.text,
-        ) ?? DateTime.now().add(const Duration(hours: 1)),
+              eventEndDateController.text,
+              eventEndTimeController.text,
+            ) ??
+            DateTime.now().add(const Duration(hours: 1)),
         registrationDeadline: _parseAndFormatDateTime(
-          eventRegistrationDeadlineController.text,
-          eventRegistrationDeadlineTimeController.text,
-        ) ?? DateTime.now().add(const Duration(hours: 1)),
-   
-        
+              eventRegistrationDeadlineController.text,
+              eventRegistrationDeadlineTimeController.text,
+            ) ??
+            DateTime.now().add(const Duration(hours: 1)),
+
         participantCapacity: int.parse(eventParticipantCapacityController.text),
         latitude: latitude!,
         longitude: longitude!,
@@ -266,10 +280,9 @@ class _AddEventScreenState extends State<AddEventScreen> {
         promoVideo: promoVideoUrl,
       );
       print('[DEBUG] Event data before bloc: ${eventData.toDebugString()}');
-      
+
       // Add event creation event to bloc
       context.read<EventBloc>().add(CreateEventEvent(eventData, image!, video));
-
     } catch (e) {
       print('[ERROR] Form submission error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -281,11 +294,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
   DateTime? _parseAndFormatDateTime(String date, String time) {
     try {
       if (date.isEmpty) return null;
-      
+
       // Parse date (DD/MM/YYYY format)
       final dateParts = date.split('/');
       if (dateParts.length != 3) return null;
-      
+
       // Parse time (HH:mm format)
       final timeParts = time.isEmpty ? ['00', '00'] : time.split(':');
       if (timeParts.length != 2) return null;
@@ -318,6 +331,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {

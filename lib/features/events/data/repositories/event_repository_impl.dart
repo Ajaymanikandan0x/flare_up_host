@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../../../../core/error/app_error.dart';
-import '../../../../core/network/api_response.dart';
 import '../../../../core/utils/cloudinary_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../domain/entities/category_entity.dart';
@@ -10,7 +9,6 @@ import '../../domain/entities/host_event_entite.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../datasources/event_remote_datasource.dart';
 import '../models/event_model.dart';
-import '../models/host_event_model.dart';
 
 class EventRepositoryImpl implements EventRepositoryDomain {
   final EventRemoteDataSource _remoteDataSource;
@@ -38,26 +36,22 @@ class EventRepositoryImpl implements EventRepositoryDomain {
         registrationDeadline: event.registrationDeadline,
         bannerImage: event.bannerImage,
         promoVideo: event.promoVideo,
-        hostId: event.hostId
-    );
+        hostId: event.hostId);
     await _remoteDataSource.createEvent(eventModel);
   }
-
 
   @override
   Future<EventEntity> getEventById(String eventId) async {
     try {
-        final response = await _remoteDataSource.getEventById(int.parse(eventId));
-        if (response.data == null) {
-            throw AppError(
-                userMessage: 'Event not found',
-                type: ErrorType.businessLogic
-            );
-        }
-        return response.data!.toEntity();
+      final response = await _remoteDataSource.getEventById(int.parse(eventId));
+      if (response.data == null) {
+        throw AppError(
+            userMessage: 'Event not found', type: ErrorType.businessLogic);
+      }
+      return response.data!.toEntity();
     } catch (e) {
-        Logger.error('Get event by ID error', e);
-        rethrow;
+      Logger.error('Get event by ID error', e);
+      rethrow;
     }
   }
 
@@ -82,18 +76,17 @@ class EventRepositoryImpl implements EventRepositoryDomain {
         registrationDeadline: event.registrationDeadline,
         bannerImage: event.bannerImage,
         promoVideo: event.promoVideo,
-        hostId: event.hostId
-    );
+        hostId: event.hostId);
     await _remoteDataSource.updateEvent(event.hostId, eventModel);
   }
 
   @override
   Future<void> deleteEvent(String eventId) async {
     try {
-        await _remoteDataSource.deleteEvent(int.parse(eventId));
+      await _remoteDataSource.deleteEvent(int.parse(eventId));
     } catch (e) {
-        Logger.error('Delete event error', e);
-        rethrow;
+      Logger.error('Delete event error', e);
+      rethrow;
     }
   }
 
@@ -112,10 +105,42 @@ class EventRepositoryImpl implements EventRepositoryDomain {
       rethrow;
     }
   }
-  
+
   @override
-  Future<List<HostEventEntities>> getHostEvents(String hostId) {
-    // TODO: implement getHostEvents
-    throw UnimplementedError();
+  Future<List<HostEventEntities>> getHostEvents(String hostId) async {
+    try {
+      Logger.debug('Getting host events for hostId: $hostId');
+
+      final parsedId = int.tryParse(hostId);
+      if (parsedId == null) {
+        throw AppError(
+          userMessage: 'Invalid host ID format',
+          type: ErrorType.validation,
+        );
+      }
+
+      final response = await _remoteDataSource.getHostEvents(parsedId);
+
+      if (response.data == null) {
+        return [];
+      }
+
+      // Filter out events with invalid banner images
+      final events = response.data!
+          .where((model) {
+            final validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
+            return model.bannerImage.isNotEmpty &&
+                validExtensions.any(
+                    (ext) => model.bannerImage.toLowerCase().endsWith(ext));
+          })
+          .map((model) => model.toEntity())
+          .toList();
+
+      Logger.debug('Returning ${events.length} valid events');
+      return events;
+    } catch (e) {
+      Logger.error('Get host events error:', e);
+      rethrow;
+    }
   }
 }

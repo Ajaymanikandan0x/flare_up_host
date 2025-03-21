@@ -1,4 +1,5 @@
 // lib/features/events/presentation/screens/event_approval_waiting_screen.dart
+import 'package:flare_up_host/core/routes/routs.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -33,7 +34,7 @@ class EventApprovalWaitingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               PrimaryButton(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => Navigator.pushNamedAndRemoveUntil(context, AppRouts.appNav, (route) => false),
                 text: 'Back to Events',
                 width: double.infinity,
                 height: Responsive.buttonHeight,
