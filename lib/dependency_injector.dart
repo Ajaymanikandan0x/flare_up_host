@@ -33,7 +33,7 @@ import 'features/profile/domain/usecases/get_user_profile_usecase.dart';
 import 'features/profile/domain/usecases/update_user_profile_usecase.dart';
 import 'features/profile/domain/usecases/upload_profile_image_usecase.dart';
 import 'features/profile/presentation/bloc/host_profile_bloc.dart';
-
+import 'features/events/presentation/bloc/cubit/video_player_cubit.dart';
 
 class DependencyInjector {
   static final DependencyInjector _instance = DependencyInjector._internal();
@@ -80,11 +80,15 @@ class DependencyInjector {
   // Add location dependencies
   late final LocationBloc locationBloc;
 
+  // Add VideoPlayerCubit dependency
+  late VideoPlayerCubit _videoPlayerCubit;
+
   void setup() {
     _setupSharedServices();
     _setupAuthenticationDependencies();
     _setupHostProfileDependencies();
     _setupEventDependencies();
+    _setupVideoPlayerDependencies();
     locationBloc = LocationBloc();
   }
 
@@ -172,9 +176,14 @@ class DependencyInjector {
     );
   }
 
+  void _setupVideoPlayerDependencies() {
+    _videoPlayerCubit = VideoPlayerCubit();
+  }
+
   // Getters
 
   AuthBloc get authBloc => _authBloc;
   HostProfileBloc get hostProfileBloc => _hostProfileBloc;
   EventBloc get eventBloc => _eventBloc;
+  VideoPlayerCubit get videoPlayerCubit => _videoPlayerCubit;
 }

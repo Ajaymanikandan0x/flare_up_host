@@ -1,5 +1,4 @@
 import 'package:flare_up_host/core/theme/theme.dart';
-import 'package:flare_up_host/features/events/presentation/bloc/location/location_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -25,6 +24,7 @@ void main() async {
       BlocProvider(create: (context) => DependencyInjector().hostProfileBloc),
       BlocProvider(create: (context) => DependencyInjector().eventBloc),
       BlocProvider(create: (context) => DependencyInjector().locationBloc),
+      BlocProvider(create: (context) => DependencyInjector().videoPlayerCubit),
       BlocProvider(create: (context) => ThemeCubit(prefs)),
     ],
     child: const MyApp(),

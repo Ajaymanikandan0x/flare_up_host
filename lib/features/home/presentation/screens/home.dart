@@ -102,7 +102,13 @@ class _HostHomeState extends State<HostHome> {
                 padding: const EdgeInsets.all(16),
                 itemCount: state.events.length,
                 itemBuilder: (context, index) {
-                  return EventCard(event: state.events[index]);
+                  return GestureDetector(
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRouts.eventHome,
+                      arguments: state.events[index],
+                    ),
+                    child: EventCard(event: state.events[index]));
                 },
               );
             }
