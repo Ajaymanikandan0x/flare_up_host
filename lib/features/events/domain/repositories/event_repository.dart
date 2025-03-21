@@ -9,7 +9,8 @@ abstract class EventRepositoryDomain {
   Future<void> createEvent(EventEntity event);
   Future<List<HostEventEntities>> getHostEvents(String hostId);
   Future<EventEntity> getEventById(String eventId);
-  Future<void> updateEvent(EventEntity event);
+  Future<void> updateEvent(int eventId, EventEntity event,
+      {File? bannerImage, File? promoVideo});
   Future<void> deleteEvent(String eventId);
   Future<List<CategoryEntity>> getCategories();
   Future<String?> uploadEventMedia(File file, UploadType type);

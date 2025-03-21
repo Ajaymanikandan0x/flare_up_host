@@ -10,7 +10,7 @@ abstract class EventRemoteDataSource {
   Future<ApiResponse> createEvent(EventModel event, {File? bannerImage, File? promoVideo});
   Future<ApiResponse<List<HostGetEventModel>>> getHostEvents(int hostId);
   Future<ApiResponse<EventModel>> getEventById(int eventId);
-  Future<ApiResponse> updateEvent(int eventId, EventModel event, {File? bannerImage, File? promoVideo});
+  Future<ApiResponse> updateEvent( int eventId, EventModel event, {File? bannerImage, File? promoVideo});
   Future<ApiResponse> eventStatus(int eventId);
   Future<ApiResponse<List<CategoryModel>>> getEventCategories();
   Future<void> deleteEvent(int eventId);

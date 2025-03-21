@@ -41,6 +41,8 @@ class EventEntity {
     required this.hostId,
   });
 
+  String get id => hostId.toString();
+
   EventEntity copyWith({
     String? name,
     String? description,

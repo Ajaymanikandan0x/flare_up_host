@@ -7,7 +7,6 @@ import '../../../../../core/utils/logger.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/widgets/video_player.dart';
 import '../../../domain/entities/media_entity.dart';
-import '../../../domain/repositories/event_repository.dart';
 import '../../bloc/event_bloc.dart';
 import '../../bloc/event_event.dart';
 import '../../bloc/event_state.dart';

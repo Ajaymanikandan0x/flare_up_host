@@ -208,3 +208,21 @@ class EventCleanupState extends EventBlocState {
   @override
   List<Object?> get props => [];
 }
+
+class EditEventStepState extends EventBlocState {
+  final int currentStep;
+
+  const EditEventStepState(this.currentStep);
+
+  @override
+  List<Object> get props => [currentStep];
+}
+
+class PaymentRequiredState extends EventBlocState {
+  final bool isRequired;
+
+  const PaymentRequiredState(this.isRequired);
+
+  @override
+  List<Object> get props => [isRequired];
+}

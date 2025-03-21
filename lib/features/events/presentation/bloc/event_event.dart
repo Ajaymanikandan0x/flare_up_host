@@ -27,14 +27,18 @@ class CreateEventEvent extends EventBlocEvent {
 class UpdateEventEvent extends EventBlocEvent {
   final EventEntity eventEntity;
   final int eventId;
+  final File? bannerImage;
+  final File? promoVideo;
 
   const UpdateEventEvent({
     required this.eventEntity,
     required this.eventId,
+    this.bannerImage,
+    this.promoVideo,
   });
 
   @override
-  List<Object?> get props => [eventEntity, eventId];
+  List<Object?> get props => [eventEntity, eventId, bannerImage, promoVideo];
 }
 
 class FetchHostEventsEvent extends EventBlocEvent {
@@ -154,6 +158,22 @@ class SelectDateEvent extends EventBlocEvent {
 class CleanupDropdownEvent extends EventBlocEvent {
   @override
   List<Object?> get props => [];
+}
+
+class EditEventStepChangeEvent extends EventBlocEvent {
+  final int step;
+  const EditEventStepChangeEvent(this.step);
+
+  @override
+  List<Object?> get props => [step];
+}
+
+class TogglePaymentRequiredEvent extends EventBlocEvent {
+  final bool isRequired;
+  const TogglePaymentRequiredEvent(this.isRequired);
+
+  @override
+  List<Object?> get props => [isRequired];
 }
 
 abstract class EventState extends Equatable {

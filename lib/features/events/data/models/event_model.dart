@@ -2,6 +2,7 @@ import '../../domain/entities/event_entity.dart';
 
 class EventModel extends EventEntity {
   EventModel({
+    
     required super.name,
     required super.description,
     required super.category,
@@ -25,6 +26,7 @@ class EventModel extends EventEntity {
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
+    
       name: json['title'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? '',
@@ -52,6 +54,7 @@ class EventModel extends EventEntity {
 
   Map<String, dynamic> toJson() {
     return {
+    
       'title': name,
       'description': description,
       'category': int.tryParse(category),
@@ -76,6 +79,7 @@ class EventModel extends EventEntity {
 
   EventEntity toEntity() {
     return EventEntity(
+    
       name: name,
       description: description,
       category: category,

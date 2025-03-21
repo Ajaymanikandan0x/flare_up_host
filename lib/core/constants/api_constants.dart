@@ -19,17 +19,21 @@ class ApiEndpoints {
       'verify-otp-forgot-password/'; //(post) email, enteredOtp
   static const setNewPassword =
       'set-new-password/'; //(post) new_password, confirm_password, email
-      
+
   static const createEvent =
       'events/'; //(post)   'title', 'description', 'category', 'type', 'host_id', 'organization_id',
   //'latitude', 'longitude', 'address_line_1', 'city', 'state', 'country',
   //'payment_required', 'ticket_price', 'participant_capacity', 'banner_image',
   //'promo_video', 'start_date_time', 'end_date_time', 'registration_deadline',
 
-  static const editEvent = 'events/event/event_id/'; //(put)
+  static const editEvent =
+      'events/event/event_id/'; //(put) 'title', 'description', 'category', 'type', 'host_id', 'organization_id',
+  //'latitude', 'longitude', 'address_line_1', 'city', 'state', 'country',
+  //'payment_required', 'ticket_price', 'participant_capacity', 'banner_image',
+  //'promo_video', 'start_date_time', 'end_date_time', 'registration_deadline',
   static const hosterEvent =
       'events/events/hoster/hoster_id/'; //(get) To fetch all events of a particular hoster
-//'id','title', 'description', 'category', 'type', 'host_id', 'organization_id',
+//'title', 'description', 'category', 'type', 'host_id', 'organization_id',
 //             'latitude', 'longitude', 'address_line_1', 'city', 'state', 'country',
 //             'payment_required', 'ticket_price', 'participant_capacity', 'banner_image',
 //             'promo_video', 'start_date_time', 'end_date_time', 'registration_deadline',

@@ -9,6 +9,7 @@ import '../../features/authentication/presentation/screens/reset_password.dart';
 import '../../features/authentication/presentation/screens/sign_in.dart';
 import '../../features/authentication/presentation/screens/sign_up.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/events/presentation/screens/edit_event_screen.dart';
 import '../../features/events/presentation/screens/event_home.dart';
 import '../../features/home/presentation/screens/home.dart';
 import '../../features/location/presentation/screens/location.dart';
@@ -30,8 +31,9 @@ class AppRouts {
   static const chat = '/chat';
   static const location = '/location';
   static const appNav = '/app_nav';
-  static const editEvent = '/editEvent';
+  static const addEvent = '/addEvent';
   static const eventHome = '/eventHome';
+  static const editEvent = '/editEvent';
   static final Map<String, Widget Function(BuildContext)> routs = {
     logo: (_) => const Logo(),
     onBoard: (_) => const OnBoardingScreen(),
@@ -46,8 +48,9 @@ class AppRouts {
     chat: (_) => const ChatScreen(),
     location: (_) => const LocationScreen(),
     appNav: (_) => const AppNav(),
-    editEvent: (_) => AddEventScreen(),
+    addEvent: (_) => AddEventScreen(),
     eventHome: (_) => EventHome(),
+    editEvent: (_) => EditEventScreen(),
   };
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {

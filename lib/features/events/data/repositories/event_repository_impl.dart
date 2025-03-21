@@ -56,28 +56,51 @@ class EventRepositoryImpl implements EventRepositoryDomain {
   }
 
   @override
-  Future<void> updateEvent(EventEntity event) async {
-    final eventModel = EventModel(
-        name: event.name,
-        description: event.description,
-        category: event.category,
-        type: event.type,
-        isPaymentRequired: event.isPaymentRequired,
-        ticketPrice: event.ticketPrice,
-        latitude: event.latitude,
-        longitude: event.longitude,
-        addressLine1: event.addressLine1,
-        city: event.city,
-        state: event.state,
-        country: event.country,
-        participantCapacity: event.participantCapacity,
-        startDateTime: event.startDateTime,
-        endDateTime: event.endDateTime,
-        registrationDeadline: event.registrationDeadline,
-        bannerImage: event.bannerImage,
-        promoVideo: event.promoVideo,
-        hostId: event.hostId);
-    await _remoteDataSource.updateEvent(event.hostId, eventModel);
+  Future<void> updateEvent(int eventId, EventEntity event,
+      {File? bannerImage, File? promoVideo}) async {
+    try {
+      Logger.debug('🔄 Starting event update in repository');
+      Logger.debug('📝 Host ID: ${event.hostId}');
+      Logger.debug('📝 Event name: ${event.name}');
+      Logger.debug('📝 Event category: ${event.category}');
+      Logger.debug(
+          '📝 Event dates: ${event.startDateTime} to ${event.endDateTime}');
+
+      final eventModel = EventModel(
+          name: event.name,
+          description: event.description,
+          category: event.category,
+          type: event.type,
+          isPaymentRequired: event.isPaymentRequired,
+          ticketPrice: event.ticketPrice,
+          latitude: event.latitude,
+          longitude: event.longitude,
+          addressLine1: event.addressLine1,
+          city: event.city,
+          state: event.state,
+          country: event.country,
+          participantCapacity: event.participantCapacity,
+          startDateTime: event.startDateTime,
+          endDateTime: event.endDateTime,
+          registrationDeadline: event.registrationDeadline,
+          bannerImage: event.bannerImage,
+          promoVideo: event.promoVideo,
+          hostId: event.hostId);
+
+      Logger.debug('🖼️ Banner image file included: ${bannerImage != null}');
+      Logger.debug('🎬 Promo video file included: ${promoVideo != null}');
+
+      final response = await _remoteDataSource.updateEvent(eventId, eventModel,
+          bannerImage: bannerImage, promoVideo: promoVideo);
+
+      Logger.debug('✅ Remote data source call completed successfully');
+      Logger.debug('📊 Response status: ${response.data}');
+      Logger.debug('📊 Response message: ${response.message}');
+    } catch (e) {
+      Logger.error('❌ Error updating event:', e);
+      Logger.debug('❌ Error details: ${e.toString()}');
+      rethrow;
+    }
   }
 
   @override

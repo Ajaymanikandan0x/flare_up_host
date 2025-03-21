@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
+
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/app_error.dart';
 import '../../../../core/network/api_response.dart';
@@ -175,18 +177,56 @@ class EventRemoteDataSourceImpl extends BaseApiClient
   Future<ApiResponse> updateEvent(int eventId, EventModel event,
       {File? bannerImage, File? promoVideo}) async {
     try {
+      Logger.debug('🔄 Starting event update in remote data source');
+      Logger.debug('📝 Event ID to update: $eventId');
+      Logger.debug('📝 Event model: ${event.toString()}');
+
       final eventData = await _prepareEventData(event,
           bannerImage: bannerImage, promoVideo: promoVideo);
+
+      Logger.debug('📝 Prepared event data: $eventData');
+
       final endpoint =
           '${ApiEndpoints.baseUrl}${ApiEndpoints.editEvent.replaceAll('event_id', eventId.toString())}';
 
-      return await makeRequest(
-        request: () => networkService.dio.put(endpoint, data: eventData),
+      Logger.debug('🔌 API endpoint: $endpoint');
+
+      // Get options with proper authentication
+      final options = await getRequestOptions();
+
+      // Log authentication status
+      Logger.debug(
+          '🔑 Authorization header present: ${options.headers?.containsKey('Authorization') ?? false}');
+
+      // Use the options with your request
+      Logger.debug('📡 Making PUT request with auth headers...');
+      final response = await makeRequest(
+        request: () => networkService.dio.put(
+          endpoint,
+          data: eventData,
+          options: options, // Make sure to use the options here
+        ),
         successMessage: 'Event updated successfully',
         errorMessage: 'Failed to update event',
       );
+
+      Logger.debug('📥 Response received:');
+      Logger.debug('📊 Status: ${response.statusCode}');
+      Logger.debug('📊 Message: ${response.message}');
+      Logger.debug('📊 Data: ${response.data}');
+
+      return response;
     } catch (e) {
-      Logger.error('Update event error:', e);
+      Logger.error('❌ Update event error:', e);
+      Logger.debug('❌ Error details: ${e.toString()}');
+      // Try to extract more details if it's a DioException
+      if (e is DioException) {
+        Logger.debug('❌ DioError type: ${e.type}');
+        Logger.debug('❌ DioError message: ${e.message}');
+        Logger.debug('❌ DioError response: ${e.response?.data}');
+        Logger.debug('❌ DioError status code: ${e.response?.statusCode}');
+        Logger.debug('❌ DioError headers: ${e.response?.headers}');
+      }
       rethrow;
     }
   }

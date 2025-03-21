@@ -180,6 +180,12 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
       Logger.debug('Cleaning up dropdown state');
       emit(EventCleanupState());
     });
+    on<EditEventStepChangeEvent>((event, emit) {
+      emit(EditEventStepState(event.step));
+    });
+    on<TogglePaymentRequiredEvent>((event, emit) {
+      emit(PaymentRequiredState(event.isRequired));
+    });
   }
 
   void _onSelectVideo(SelectVideoEvent event, Emitter<EventBlocState> emit) {
@@ -248,9 +254,22 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
   ) async {
     try {
       emit(EventLoading());
-      await updateEventUseCase(event.eventEntity);
+      Logger.debug('🔄 Starting event update in bloc');
+      Logger.debug('📊 Event ID: ${event.eventId}');
+      Logger.debug('📊 Event details being updated: ${event.eventEntity.name}');
+
+      await updateEventUseCase(
+        
+        event.eventEntity,
+        bannerImage: event.bannerImage,
+        promoVideo: event.promoVideo,
+      );
+
+      Logger.debug('✅ Repository returned successfully');
       emit(EventSuccess());
+      Logger.debug('✅ EventSuccess state emitted');
     } catch (e) {
+      Logger.error('❌ Event update failed:', e);
       emit(EventError(e.toString()));
     }
   }
