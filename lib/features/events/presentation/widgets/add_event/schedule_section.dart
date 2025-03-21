@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../../core/widgets/date_field.dart';
 import '../../../../../core/widgets/time_picker.dart';
+import '../../../../../core/theme/app_palette.dart';
 
 class ScheduleSection extends StatelessWidget {
   final TextEditingController eventStartDateController;
@@ -11,6 +12,7 @@ class ScheduleSection extends StatelessWidget {
   final TextEditingController eventStartTimeController;
   final TextEditingController eventEndTimeController;
   final TextEditingController eventRegistrationDeadlineTimeController;
+
   const ScheduleSection({
     super.key,
     required this.eventStartTimeController,
@@ -24,14 +26,12 @@ class ScheduleSection extends StatelessWidget {
   String _combineDateAndTime(String date, String time) {
     if (date.isEmpty || time.isEmpty) return '';
 
-    // Parse the date and time
     final DateTime dateTime = DateFormat('yyyy-MM-dd').parse(date);
     final TimeOfDay timeOfDay = TimeOfDay(
       hour: int.parse(time.split(':')[0]),
       minute: int.parse(time.split(':')[1]),
     );
 
-    // Combine date and time
     final DateTime combined = DateTime(
       dateTime.year,
       dateTime.month,
@@ -40,8 +40,41 @@ class ScheduleSection extends StatelessWidget {
       timeOfDay.minute,
     );
 
-    // Format to match database format
     return DateFormat("yyyy-MM-dd HH:mm:00+05:30").format(combined);
+  }
+
+  DateTime? _parseDateTime(String date, String time) {
+    if (date.isEmpty || time.isEmpty) return null;
+    try {
+      final DateTime dateTime = DateFormat('yyyy-MM-dd').parse(date);
+      final TimeOfDay timeOfDay = TimeOfDay(
+        hour: int.parse(time.split(':')[0]),
+        minute: int.parse(time.split(':')[1]),
+      );
+      return DateTime(
+        dateTime.year,
+        dateTime.month,
+        dateTime.day,
+        timeOfDay.hour,
+        timeOfDay.minute,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String? _validateDateTime(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return 'Please select $fieldName';
+    }
+
+    final now = DateTime.now();
+    final selected = DateFormat('yyyy-MM-dd').parse(value);
+
+    if (selected.isBefore(now) && !selected.isAtSameMomentAs(now)) {
+      return 'Cannot select past dates';
+    }
+    return null;
   }
 
   @override
@@ -53,86 +86,214 @@ class ScheduleSection extends StatelessWidget {
           'Schedule Details',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 16),
-        TimeField(
-          controller: eventStartTimeController,
-          label: 'Event Start Time',
-          prefixIcon: const Icon(Icons.schedule),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please select start time';
-            }
-            return null;
-          },
-          onChanged: (time) {
-            if (eventStartDateController.text.isNotEmpty) {
-              final formattedDateTime = _combineDateAndTime(
-                eventStartDateController.text,
-                time,
-              );
-              eventStartDateController.text = formattedDateTime;
-            }
-          },
+        const SizedBox(height: 8),
+        const Text(
+          'Set your event timeline including registration deadline',
+          style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
-        const SizedBox(height: 16),
-        DateField(
-          controller: eventStartDateController,
-          label: 'Event Start Date',
-          prefixIcon: const Icon(Icons.calendar_today),
-          onChanged: (date) {
-            if (eventStartTimeController.text.isNotEmpty) {
-              final formattedDateTime = _combineDateAndTime(
-                date,
-                eventStartTimeController.text,
-              );
-              eventStartDateController.text = formattedDateTime;
-            }
-          },
+        const SizedBox(height: 24),
+
+        // Event Start Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Event Start',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TimeField(
+                      controller: eventStartTimeController,
+                      label: 'Time',
+                      prefixIcon: const Icon(Icons.schedule),
+                      validator: (value) =>
+                          value?.isEmpty ?? true ? 'Required' : null,
+                      onChanged: (time) {
+                        if (eventStartDateController.text.isNotEmpty) {
+                          final formattedDateTime = _combineDateAndTime(
+                            eventStartDateController.text,
+                            time,
+                          );
+                          eventStartDateController.text = formattedDateTime;
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DateField(
+                      controller: eventStartDateController,
+                      label: 'Date',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      validator: (value) =>
+                          _validateDateTime(value, 'start date'),
+                      onChanged: (date) {
+                        if (eventStartTimeController.text.isNotEmpty) {
+                          final formattedDateTime = _combineDateAndTime(
+                            date,
+                            eventStartTimeController.text,
+                          );
+                          eventStartDateController.text = formattedDateTime;
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+
         const SizedBox(height: 16),
-        DateField(
-          controller: eventEndDateController,
-          label: 'Event End Date',
-          prefixIcon: const Icon(Icons.calendar_month),
+
+        // Event End Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Event End',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TimeField(
+                      controller: eventEndTimeController,
+                      label: 'Time',
+                      prefixIcon: const Icon(Icons.schedule),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) return 'Required';
+
+                        final startDateTime = _parseDateTime(
+                          eventStartDateController.text,
+                          eventStartTimeController.text,
+                        );
+                        final endDateTime = _parseDateTime(
+                          eventEndDateController.text,
+                          value!,
+                        );
+
+                        if (startDateTime != null &&
+                            endDateTime != null &&
+                            endDateTime.isBefore(startDateTime)) {
+                          return 'End time must be after start time';
+                        }
+                        return null;
+                      },
+                      onChanged: (time) {
+                        if (eventEndDateController.text.isNotEmpty) {
+                          final formattedDateTime = _combineDateAndTime(
+                            eventEndDateController.text,
+                            time,
+                          );
+                          eventEndDateController.text = formattedDateTime;
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DateField(
+                      controller: eventEndDateController,
+                      label: 'Date',
+                      prefixIcon: const Icon(Icons.calendar_month),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) return 'Required';
+
+                        final startDate = DateFormat('yyyy-MM-dd')
+                            .parse(eventStartDateController.text);
+                        final endDate = DateFormat('yyyy-MM-dd').parse(value!);
+
+                        if (endDate.isBefore(startDate)) {
+                          return 'End date must be after start date';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        TimeField(
-          controller: eventEndTimeController,
-          label: 'Event End Time',
-          prefixIcon: const Icon(Icons.schedule),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please select end time';
-            }
-            return null;
-          },
-          onChanged: (time) {
-            if (eventEndDateController.text.isNotEmpty) {
-              final formattedDateTime = _combineDateAndTime(
-                eventEndDateController.text,
-                time,
-              );
-              eventEndDateController.text = formattedDateTime;
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-        DateField(
-          controller: eventRegistrationDeadlineController,
-          label: 'Registration Deadline',
-          prefixIcon: const Icon(Icons.timer),
-        ),
-        const SizedBox(height: 16),
-        TimeField(
-          controller: eventRegistrationDeadlineTimeController,
-          label: 'Registration Deadline Time',
-          prefixIcon: const Icon(Icons.schedule),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please select registration deadline time';
-            }
-            return null;
-          },
+
+        const SizedBox(height: 24),
+
+        // Registration Deadline Section
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Registration Deadline',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              const Text(
+                'Set when registrations will close',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TimeField(
+                      controller: eventRegistrationDeadlineTimeController,
+                      label: 'Time',
+                      prefixIcon: const Icon(Icons.schedule),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) return 'Required';
+
+                        final deadlineDateTime = _parseDateTime(
+                          eventRegistrationDeadlineController.text,
+                          value!,
+                        );
+                        final startDateTime = _parseDateTime(
+                          eventStartDateController.text,
+                          eventStartTimeController.text,
+                        );
+
+                        if (deadlineDateTime != null &&
+                            startDateTime != null &&
+                            !deadlineDateTime.isBefore(startDateTime)) {
+                          return 'Deadline must be before event start';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DateField(
+                      controller: eventRegistrationDeadlineController,
+                      label: 'Date',
+                      prefixIcon: const Icon(Icons.timer),
+                      validator: (value) =>
+                          _validateDateTime(value, 'deadline'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

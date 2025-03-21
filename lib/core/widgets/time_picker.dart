@@ -1,3 +1,4 @@
+import 'package:flare_up_host/core/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 
 class TimeField extends StatefulWidget {
@@ -8,9 +9,9 @@ class TimeField extends StatefulWidget {
   final String? Function(String?)? validator;
 
   const TimeField({
-    super.key, 
-    required this.controller, 
-    this.label, 
+    super.key,
+    required this.controller,
+    this.label,
     this.prefixIcon,
     this.onChanged,
     this.validator,
@@ -71,7 +72,8 @@ class _TimeFieldState extends State<TimeField> {
   void _updateControllerValue() {
     final hour = _selectedTime.hour;
     final minute = _selectedTime.minute;
-    final formattedTime = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+    final formattedTime =
+        '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
     widget.controller.text = formattedTime;
     if (widget.onChanged != null) {
       widget.onChanged!(formattedTime);
@@ -80,35 +82,73 @@ class _TimeFieldState extends State<TimeField> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildPicker(
-              _hourController,
-              12,
-              _onHourChanged,
-              (index) => (index + 1).toString().padLeft(2, '0'),
-              'HH',
-              const BorderRadius.only(
-                  topLeft: Radius.circular(8), bottomLeft: Radius.circular(8))),
-          _buildPicker(
-              _minuteController,
-              60,
-              _onMinuteChanged,
-              (index) => index.toString().padLeft(2, '0'),
-              'MM',
-              BorderRadius.zero),
-          _buildPicker(
-              _ampmController,
-              2,
-              _onAmpmChanged,
-              (index) => index == 0 ? 'am' : 'pm',
-              'AM/PM',
-              const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8))),
-        ],
+    Responsive.init(context);
+
+    // Calculate responsive dimensions
+    final pickerWidth = (Responsive.screenWidth * 0.25).clamp(50.0, 80.0);
+    final ampmWidth = (Responsive.screenWidth * 0.18)
+        .clamp(40.0, 60.0); // Smaller width for AM/PM
+    final pickerHeight = Responsive.isTablet ? 180.0 : 150.0;
+    final itemExtent = Responsive.isTablet ? 50.0 : 40.0;
+    final selectedBoxHeight = Responsive.isTablet ? 55.0 : 45.0;
+    final borderRadius = Responsive.borderRadius * 0.2;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: Responsive.screenWidth * 0.85,
+      ),
+      child: IntrinsicWidth(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              flex: 3,
+              child: _buildPicker(
+                _hourController,
+                12,
+                _onHourChanged,
+                (index) => (index + 1).toString().padLeft(2, '0'),
+                'HH',
+                BorderRadius.horizontal(left: Radius.circular(borderRadius)),
+                pickerWidth,
+                pickerHeight,
+                itemExtent,
+                selectedBoxHeight,
+              ),
+            ),
+            Flexible(
+              flex: 3,
+              child: _buildPicker(
+                _minuteController,
+                60,
+                _onMinuteChanged,
+                (index) => index.toString().padLeft(2, '0'),
+                'MM',
+                BorderRadius.zero,
+                pickerWidth,
+                pickerHeight,
+                itemExtent,
+                selectedBoxHeight,
+              ),
+            ),
+            Flexible(
+              flex: 2, // Smaller flex for AM/PM
+              child: _buildPicker(
+                _ampmController,
+                2,
+                _onAmpmChanged,
+                (index) => index == 0 ? 'am' : 'pm',
+                'AM/PM',
+                BorderRadius.horizontal(right: Radius.circular(borderRadius)),
+                ampmWidth, // Use smaller width for AM/PM
+                pickerHeight,
+                itemExtent,
+                selectedBoxHeight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -120,25 +160,34 @@ class _TimeFieldState extends State<TimeField> {
     String Function(int) formatLabel,
     String semanticLabel,
     BorderRadius borderRadius,
+    double width,
+    double height,
+    double itemExtent,
+    double selectedBoxHeight,
   ) {
     return SizedBox(
-      width: 75,
-      height: 150,
+      width: width,
+      height: height,
       child: Stack(
         children: [
           ListWheelScrollView.useDelegate(
             controller: controller,
-            itemExtent: 40,
+            itemExtent: itemExtent,
             diameterRatio: 1.2,
             offAxisFraction: 0,
-            onSelectedItemChanged: onSelectedItemChanged,
+            onSelectedItemChanged: (index) {
+              onSelectedItemChanged(index);
+              _updateControllerValue();
+            },
             physics: const FixedExtentScrollPhysics(),
             childDelegate: ListWheelChildBuilderDelegate(
               builder: (context, index) {
                 return Container(
                   alignment: Alignment.center,
                   child: TimeTileWidget(
-                      time: formatLabel(index), isSelected: false),
+                    time: formatLabel(index),
+                    isSelected: false,
+                  ),
                 );
               },
               childCount: itemCount,
@@ -146,8 +195,7 @@ class _TimeFieldState extends State<TimeField> {
           ),
           Center(
             child: Container(
-              height: 45,
-              width: double.infinity,
+              height: selectedBoxHeight,
               decoration: BoxDecoration(
                 color: Colors.grey.withOpacity(0.15),
                 borderRadius: borderRadius,
