@@ -224,4 +224,16 @@ class FormValidator {
 
     return null;
   }
+
+  static bool isValidVideoFormat(String filePath) {
+    final validFormats = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+    final extension = filePath.toLowerCase().split('.').last;
+    return validFormats.contains('.$extension');
+  }
+
+  static bool isValidImageFormat(String filePath) {
+    final validFormats = ['.jpg', '.jpeg', '.png', '.webp'];
+    final extension = filePath.toLowerCase().split('.').last;
+    return validFormats.contains('.$extension');
+  }
 }

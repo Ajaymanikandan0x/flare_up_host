@@ -7,4 +7,7 @@ const Widget largeHeight = SizedBox(height: 35);
 const Widget extraLargeHeight = SizedBox(height: 70);
 const String cloudinaryCloudName = 'dzwjm8n8v';
 const String cloudinaryUploadPreset = 'ytxktrtm';
-const String cloudinaryBaseUrl =  'https://res.cloudinary.com/$cloudinaryCloudName/image/upload/';
+const String cloudinaryBaseUrl =
+    'https://res.cloudinary.com/$cloudinaryCloudName';
+const String cloudinaryImageUrl = '$cloudinaryBaseUrl/image/upload';
+const String cloudinaryVideoUrl = '$cloudinaryBaseUrl/video/upload';

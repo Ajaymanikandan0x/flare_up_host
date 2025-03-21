@@ -9,6 +9,7 @@ import 'core/config/app_config.dart';
 import 'core/routes/routs.dart';
 import 'core/theme/cubit/theme_cubit.dart';
 import 'dependency_injector.dart';
+import 'service/navigation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
     return BlocBuilder<ThemeCubit, bool>(
       builder: (context, isDark) {
         return MaterialApp(
+          navigatorKey: NavigationService.navigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'FlareUp',
           theme: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,

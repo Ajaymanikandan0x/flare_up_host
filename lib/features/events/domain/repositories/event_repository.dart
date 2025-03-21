@@ -15,4 +15,7 @@ abstract class EventRepositoryDomain {
   Future<String?> uploadEventMedia(File file, UploadType type);
 }
 
-enum MediaType { image, video }
+enum MediaType {
+  image,
+  video,
+}

@@ -29,14 +29,15 @@ class _HostHomeState extends State<HostHome> {
       Logger.debug('Loading events...');
       final hostId = await context.read<EventBloc>().storageService.getUserId();
       Logger.debug('Got hostId: $hostId');
-      
+
       if (hostId != null) {
         Logger.debug('Dispatching FetchHostEventsEvent');
         context.read<EventBloc>().add(FetchHostEventsEvent(hostId));
       } else {
         Logger.debug('Host ID is null');
+        Navigator.of(context).pushReplacementNamed('/login');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load user ID')),
+          const SnackBar(content: Text('Please login to view events')),
         );
       }
     } catch (e) {

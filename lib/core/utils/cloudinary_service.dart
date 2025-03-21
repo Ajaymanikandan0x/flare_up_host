@@ -6,6 +6,7 @@ import '../constants/constants.dart';
 import '../error/app_error.dart';
 import '../error/error_handler.dart';
 import '../storage/secure_storage_service.dart';
+import '../utils/logger.dart';
 
 enum UploadType {
   profile,
@@ -26,7 +27,11 @@ class CloudinaryService {
 
   CloudinaryService(this._storageService) : _dio = Dio();
 
-  Future<String?> uploadFile(File file, UploadType type) async {
+  Future<String?> uploadFile(
+    File file,
+    UploadType type, {
+    Function(double)? onProgress,
+  }) async {
     try {
       // Validate file
       if (!await file.exists()) {
@@ -66,7 +71,10 @@ class CloudinaryService {
 
       // Upload file
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(file.path, contentType: mimeType),
+        'file': await MultipartFile.fromFile(
+          file.path,
+          contentType: mimeType,
+        ),
         'upload_preset': cloudinaryUploadPreset,
         'folder': _getFolderName(type),
         'resource_type': type == UploadType.video ? 'video' : 'image',
@@ -77,37 +85,32 @@ class CloudinaryService {
         data: formData,
         options: Options(
           headers: {'Content-Type': 'multipart/form-data'},
-          validateStatus: (status) => true,
-          receiveTimeout: const Duration(minutes: 1),
-          sendTimeout: const Duration(minutes: 1),
+          receiveTimeout: const Duration(minutes: 5),
+          sendTimeout: const Duration(minutes: 5),
         ),
         onSendProgress: (sent, total) {
-          final progress = (sent / total * 100).toStringAsFixed(2);
-          print('Upload progress: $progress%');
+          final progress = sent / total;
+          onProgress?.call(progress);
         },
-      ).timeout(
-        const Duration(seconds: _uploadTimeout),
-        onTimeout: () => throw AppError(
-          userMessage: 'Upload timed out',
-          technicalMessage: 'Upload exceeded $_uploadTimeout seconds',
-          type: ErrorType.network,
-        ),
       );
 
       if (response.statusCode == 200) {
         final publicId = response.data['public_id'] as String?;
         if (publicId != null) {
-          return _formatUrl(publicId, type);
+          final url = _formatUrl(publicId, type);
+          print('Generated Cloudinary URL: $url');
+          return url;
         }
       }
 
       throw AppError(
         userMessage: 'Failed to upload file',
-        technicalMessage: _parseErrorMessage(response.data),
+        technicalMessage: 'Upload failed with status: ${response.statusCode}',
         type: ErrorType.server,
       );
     } catch (e) {
-      throw ErrorHandler.handle(e);
+      Logger.error('Upload error:', e);
+      rethrow;
     }
   }
 
@@ -116,7 +119,6 @@ class CloudinaryService {
       case UploadType.profile:
         return 'profiles';
       case UploadType.event:
-        return 'event_promo_videos';
       case UploadType.video:
         return 'event_promo_videos';
       case UploadType.eventBanner:
@@ -144,33 +146,32 @@ class CloudinaryService {
       case 'jpeg':
       case 'png':
       case 'gif':
+      case 'webp':
         return MediaType('image', extension);
       case 'mp4':
       case 'mov':
       case 'avi':
+      case 'mkv':
+      case 'webm':
         return MediaType('video', extension);
       default:
         return null;
     }
   }
 
-  String _formatUrl(String publicId, UploadType type) {
-    final extension = type == UploadType.video ? '.mp4' : '.jpg';
-    return '$cloudinaryBaseUrl$publicId$extension';
+  String getFullUrl(String publicId, UploadType type) {
+    final baseUrl =
+        type == UploadType.video ? cloudinaryVideoUrl : cloudinaryImageUrl;
+    final extension = type == UploadType.video ? '.mp4' : '';
+    return '$baseUrl/${_getFolderName(type)}/$publicId$extension';
   }
 
-  String _parseErrorMessage(dynamic responseData) {
-    try {
-      if (responseData is Map) {
-        if (responseData['error'] is Map) {
-          return responseData['error']['message'] ?? 'Unknown error';
-        } else if (responseData['error'] is String) {
-          return responseData['error'];
-        }
-      }
-      return 'Unknown error format: $responseData';
-    } catch (e) {
-      return 'Error parsing response: $e';
-    }
+  String _formatUrl(String publicId, UploadType type) {
+    // Remove any existing folder prefix to prevent duplication
+    final cleanPublicId = publicId.split('/').last;
+    return '${_getFolderName(type)}/$cleanPublicId';
   }
+
+
+
 }

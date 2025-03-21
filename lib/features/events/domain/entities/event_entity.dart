@@ -41,6 +41,50 @@ class EventEntity {
     required this.hostId,
   });
 
+  EventEntity copyWith({
+    String? name,
+    String? description,
+    String? category,
+    String? type,
+    bool? isPaymentRequired,
+    double? ticketPrice,
+    double? latitude,
+    double? longitude,
+    String? addressLine1,
+    String? city,
+    String? state,
+    String? country,
+    int? participantCapacity,
+    DateTime? startDateTime,
+    DateTime? endDateTime,
+    DateTime? registrationDeadline,
+    String? bannerImage,
+    String? promoVideo,
+    int? hostId,
+  }) {
+    return EventEntity(
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      type: type ?? this.type,
+      isPaymentRequired: isPaymentRequired ?? this.isPaymentRequired,
+      ticketPrice: ticketPrice ?? this.ticketPrice,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      addressLine1: addressLine1 ?? this.addressLine1,
+      city: city ?? this.city,
+      state: state ?? this.state,
+      country: country ?? this.country,
+      participantCapacity: participantCapacity ?? this.participantCapacity,
+      startDateTime: startDateTime ?? this.startDateTime,
+      endDateTime: endDateTime ?? this.endDateTime,
+      registrationDeadline: registrationDeadline ?? this.registrationDeadline,
+      bannerImage: bannerImage ?? this.bannerImage,
+      promoVideo: promoVideo ?? this.promoVideo,
+      hostId: hostId ?? this.hostId,
+    );
+  }
+
   String toDebugString() {
     return '''
       EventEntity {

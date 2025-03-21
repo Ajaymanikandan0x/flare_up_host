@@ -73,93 +73,95 @@ class HostProfile extends StatelessWidget {
 
             if (state is HostProfileLoaded) {
               final user = state.user;
-              return Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Avatar(
-                        radius: Responsive.imageSize,
-                        imgUrl: user.profileImage,
-                      ),
-                      if (state is ProfileImageUploading)
-                        const CircularProgressIndicator(),
-                    ],
-                  ),
-                  SizedBox(height: Responsive.spacingHeight),
-                  TextButton(
-                      onPressed: () async {
-                        final bloc = context.read<HostProfileBloc>();
-                        File? imageFile =
-                            await ImagePickerService.pickImageFromGallery();
-                        if (imageFile != null && context.mounted) {
-                          bloc.add(UploadProfileImage(imageFile));
-                        }
-                      },
-                      child: Text(
-                        'Change Profile Photo',
-                        style: AppTextStyles.primaryTextTheme(
-                          fontSize: Responsive.subtitleFontSize,
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Avatar(
+                          radius: Responsive.imageSize,
+                          imgUrl: user.profileImage,
                         ),
-                      )),
-                  SizedBox(height: Responsive.spacingHeight * 2),
-                  NameListTile(
-                      leading: 'UserName',
-                      title: user.username,
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRouts.editProf,
-                            arguments: {
-                              'field': user.username,
-                              'fieldType': 'UserName'
-                            });
-                      }),
-                  minHeight,
-                  NameListTile(
-                      leading: 'FullName',
-                      title: user.fullName,
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRouts.editProf,
-                            arguments: {
-                              'field': user.fullName,
-                              'fieldType': 'FullName'
-                            });
-                      }),
-                  minHeight,
-                  Text(
-                    'Private Information',
-                    style: AppTextStyles.primaryTextTheme(
-                      fontSize: Responsive.subtitleFontSize,
+                        if (state is ProfileImageUploading)
+                          const CircularProgressIndicator(),
+                      ],
                     ),
-                  ),
-                  SizedBox(height: Responsive.spacingHeight),
-                  NameListTile(
-                      leading: 'Email',
-                      title: user.email,
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRouts.editProf,
-                            arguments: {
-                              'field': user.email,
-                              'fieldType': 'Email'
-                            });
-                      }),
-                  minHeight,
-                  NameListTile(
-                      leading: 'Phone',
-                      title: user.phoneNumber ?? 'Not set',
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRouts.editProf,
-                            arguments: {
-                              'field': user.phoneNumber ?? '',
-                              'fieldType': 'PhoneNumber'
-                            });
-                      }),
-                  minHeight,
-                  NameListTile(
-                    leading: 'Role',
-                    title: user.role,
-                    onTap: () {},
-                  ),
-                ],
+                    SizedBox(height: Responsive.spacingHeight),
+                    TextButton(
+                        onPressed: () async {
+                          final bloc = context.read<HostProfileBloc>();
+                          File? imageFile =
+                              await ImagePickerService.pickImageFromGallery();
+                          if (imageFile != null && context.mounted) {
+                            bloc.add(UploadProfileImage(imageFile));
+                          }
+                        },
+                        child: Text(
+                          'Change Profile Photo',
+                          style: AppTextStyles.primaryTextTheme(
+                            fontSize: Responsive.subtitleFontSize,
+                          ),
+                        )),
+                    SizedBox(height: Responsive.spacingHeight * 2),
+                    NameListTile(
+                        leading: 'UserName',
+                        title: user.username,
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRouts.editProf,
+                              arguments: {
+                                'field': user.username,
+                                'fieldType': 'UserName'
+                              });
+                        }),
+                    minHeight,
+                    NameListTile(
+                        leading: 'FullName',
+                        title: user.fullName,
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRouts.editProf,
+                              arguments: {
+                                'field': user.fullName,
+                                'fieldType': 'FullName'
+                              });
+                        }),
+                    minHeight,
+                    Text(
+                      'Private Information',
+                      style: AppTextStyles.primaryTextTheme(
+                        fontSize: Responsive.subtitleFontSize,
+                      ),
+                    ),
+                    SizedBox(height: Responsive.spacingHeight),
+                    NameListTile(
+                        leading: 'Email',
+                        title: user.email,
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRouts.editProf,
+                              arguments: {
+                                'field': user.email,
+                                'fieldType': 'Email'
+                              });
+                        }),
+                    minHeight,
+                    NameListTile(
+                        leading: 'Phone',
+                        title: user.phoneNumber ?? 'Not set',
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRouts.editProf,
+                              arguments: {
+                                'field': user.phoneNumber ?? '',
+                                'fieldType': 'PhoneNumber'
+                              });
+                        }),
+                    minHeight,
+                    NameListTile(
+                      leading: 'Role',
+                      title: user.role,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
               );
             } else if (state is HostProfileError) {
               return Center(

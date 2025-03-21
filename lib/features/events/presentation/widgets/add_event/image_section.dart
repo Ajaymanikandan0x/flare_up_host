@@ -8,13 +8,13 @@ import '../../../domain/repositories/event_repository.dart';
 import '../../bloc/event_bloc.dart';
 import '../../bloc/event_event.dart';
 import '../../bloc/event_state.dart';
-  
+
 class ImageSection extends StatefulWidget {
   final Function(MediaEntity) onImageSelected;
   final File? existingImage;
 
   const ImageSection({
-    super.key, 
+    super.key,
     required this.onImageSelected,
     this.existingImage,
   });
@@ -27,73 +27,72 @@ class _ImageSectionState extends State<ImageSection> {
   File? selectedImage;
 
   @override
-  void initState() {
-    super.initState();
-    selectedImage = widget.existingImage;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BlocListener<EventBloc, EventBlocState>(
+    return BlocConsumer<EventBloc, EventBlocState>(
       listener: (context, state) {
-        if (state is EventImageUploadSuccess) {
+        if (state is ImageSelectionState && state.url != null) {
           widget.onImageSelected(MediaEntity(
-            file: selectedImage,
-            url: state.url,
+            file: state.selectedImage,
+            url: state.url!,
           ));
+        } else if (state is EventMediaUploadFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload image: ${state.message}')),
+          );
         }
       },
-      child: GestureDetector(
-        onTap: () async {
-          try {
-            final image = await ImagePickerService.pickImageFromGallery();
-            if (image != null) {
-              Logger.debug('Image selected: ${image.path}');
-              setState(() {
-                selectedImage = image;
-              });
-              
-              context.read<EventBloc>().add(
-                UploadEventMediaEvent(
-                  file: image,
-                  type: MediaType.image,
-                ),
+      builder: (context, state) {
+        final displayImage = state is ImageSelectionState
+            ? state.selectedImage
+            : widget.existingImage;
+
+        return GestureDetector(
+          onTap: () async {
+            try {
+              final image = await ImagePickerService.pickImageFromGallery();
+              if (image != null) {
+                Logger.debug('Image selected: ${image.path}');
+                context.read<EventBloc>()
+                  ..add(SelectImageEvent(image))
+                  ..add(const SetImageUploadingEvent(true))
+                  ..add(UploadEventMediaEvent(
+                    file: image,
+                    type: MediaType.image,
+                  ));
+              }
+            } catch (e) {
+              Logger.error('Error selecting image:', e);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error selecting image: $e')),
               );
-            } else {
-              Logger.debug('No image selected');
             }
-          } catch (e) {
-            Logger.error('Error selecting image:', e);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error selecting image: $e')),
-            );
-          }
-        },
-        child: Container(
-          width: double.infinity,
-          height: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: selectedImage != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(
-                    selectedImage!,
-                    fit: BoxFit.cover,
+          },
+          child: Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey),
+            ),
+            child: displayImage != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      displayImage,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image, size: 40, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('Add Banner Image'),
+                    ],
                   ),
-                )
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.image, size: 40, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text('Add Banner Image'),
-                  ],
-                ),
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

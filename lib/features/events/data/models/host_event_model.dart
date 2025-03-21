@@ -41,7 +41,9 @@ class HostGetEventModel extends HostEventEntities {
       category: json['category']?.toString() ?? '',
       type: json['type']?.toString() ?? '',
       hostId: int.parse(json['host_id'].toString()),
-      organizationId: json['organization_id'] != null ? int.parse(json['organization_id'].toString()) : 0,
+      organizationId: json['organization_id'] != null
+          ? int.parse(json['organization_id'].toString())
+          : 0,
       latitude: double.parse(json['latitude'].toString()),
       longitude: double.parse(json['longitude'].toString()),
       addressLine1: json['address_line_1']?.toString() ?? '',
@@ -49,22 +51,29 @@ class HostGetEventModel extends HostEventEntities {
       state: json['state']?.toString() ?? '',
       country: json['country']?.toString() ?? '',
       paymentRequired: json['payment_required'] == true,
-      ticketPrice: double.parse(json['ticket_price'].toString()),
+      ticketPrice: json['ticket_price'] != null
+          ? double.parse(json['ticket_price'].toString())
+          : 0.0,
       participantCapacity: int.parse(json['participant_capacity'].toString()),
       bannerImage: json['banner_image']?.toString() ?? '',
       promoVideo: json['promo_video']?.toString() ?? '',
       startDateTime: DateTime.parse(json['start_date_time'].toString()),
       endDateTime: DateTime.parse(json['end_date_time'].toString()),
-      registrationDeadline: DateTime.parse(json['registration_deadline'].toString()),
+      registrationDeadline:
+          DateTime.parse(json['registration_deadline'].toString()),
       createdAt: DateTime.parse(json['created_at'].toString()),
       updatedAt: DateTime.parse(json['updated_at'].toString()),
       status: json['status']?.toString() ?? '',
       statusRequest: json['status_request']?.toString() ?? '',
       approvalStatus: json['approval_status']?.toString() ?? '',
       approvalComments: json['approval_comments']?.toString() ?? '',
-      approvalUpdatedAt: json['approval_updated_at'] != null ? 
-        DateTime.parse(json['approval_updated_at'].toString()) : DateTime.now(),
-      keyParticipants: (json['key_participants'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      approvalUpdatedAt: json['approval_updated_at'] != null
+          ? DateTime.parse(json['approval_updated_at'].toString())
+          : DateTime.now(),
+      keyParticipants: (json['key_participants'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 

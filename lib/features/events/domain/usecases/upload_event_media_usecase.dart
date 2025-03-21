@@ -8,9 +8,8 @@ class UploadEventMediaUseCase {
   UploadEventMediaUseCase(this.repository);
 
   Future<String?> call(File file, MediaType type) async {
-    final uploadType = type == MediaType.image 
-        ? UploadType.eventBanner 
-        : UploadType.video;
+    final uploadType =
+        type == MediaType.video ? UploadType.video : UploadType.eventBanner;
     return repository.uploadEventMedia(file, uploadType);
   }
 }

@@ -4,6 +4,7 @@ import '../../../../core/theme/app_palette.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../events/domain/entities/host_event_entite.dart';
+import '../../../../core/constants/constants.dart';
 
 class EventCard extends StatelessWidget {
   final HostEventEntities event;
@@ -200,9 +201,11 @@ class EventCard extends StatelessWidget {
     if (!_isValidImageUrl(event.bannerImage)) {
       return _buildPlaceholderImage();
     }
-    Logger.debug('${event.promoVideo}----------');
+
+    final fullUrl = '$cloudinaryImageUrl/${event.bannerImage}';
+
     return Image.network(
-      event.bannerImage,
+      fullUrl,
       height: 200,
       width: double.infinity,
       fit: BoxFit.cover,
@@ -211,24 +214,15 @@ class EventCard extends StatelessWidget {
         return _buildLoadingImage(loadingProgress);
       },
       errorBuilder: (context, error, stackTrace) {
-        Logger.error('Error loading image: $error', stackTrace);
+        Logger.error('Error loading image: $error\nURL: $fullUrl', stackTrace);
         return _buildErrorImage();
       },
     );
   }
 
   bool _isValidImageUrl(String url) {
-    final validExtensions = [
-      '.jpg',
-      '.jpeg',
-      '.png',
-      '.gif',
-      '.webp',
-      '.mp4',
-      '.mov'
-    ];
-    return url.isNotEmpty &&
-        validExtensions.any((ext) => url.toLowerCase().endsWith(ext));
+    // Check if the URL follows the pattern: folder_name/public_id
+    return url.isNotEmpty && url.contains('/');
   }
 
   Widget _buildPlaceholderImage() {
@@ -349,9 +343,3 @@ class EventCard extends StatelessWidget {
     }
   }
 }
-
-
-
-
-
-

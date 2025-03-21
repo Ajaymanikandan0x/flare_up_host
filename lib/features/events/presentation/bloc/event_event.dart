@@ -57,19 +57,57 @@ class UploadEventMediaEvent extends EventBlocEvent {
   List<Object?> get props => [file, type];
 }
 
-class FetchCategoriesEvent extends EventBlocEvent {} 
+class FetchCategoriesEvent extends EventBlocEvent {}
+
+class SelectVideoEvent extends EventBlocEvent {
+  final File? video;
+
+  const SelectVideoEvent(this.video);
+
+  @override
+  List<Object?> get props => [video];
+}
+
+class SetVideoUploadingEvent extends EventBlocEvent {
+  final bool isUploading;
+
+  const SetVideoUploadingEvent(this.isUploading);
+
+  @override
+  List<Object?> get props => [isUploading];
+}
+
+class UploadEventImageEvent extends EventBlocEvent {
+  final File? image;
+  UploadEventImageEvent(this.image);
+}
+
+class SelectImageEvent extends EventBlocEvent {
+  final File? image;
+  const SelectImageEvent(this.image);
+}
+
+class SetImageUploadingEvent extends EventBlocEvent {
+  final bool isUploading;
+
+  const SetImageUploadingEvent(this.isUploading);
+
+  @override
+  List<Object?> get props => [isUploading];
+}
+
+class UploadEventVideoEvent extends EventBlocEvent {
+  final File? video;
+
+  const UploadEventVideoEvent(this.video);
+
+  @override
+  List<Object?> get props => [video];
+}
 
 abstract class EventState extends Equatable {
   const EventState();
-  
+
   @override
   List<Object?> get props => [];
 }
-
-class EventMediaUploadFailure extends EventState {
-  final String message;
-  const EventMediaUploadFailure(this.message);
-  
-  @override
-  List<Object?> get props => [message];
-} 

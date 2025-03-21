@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flare_up_host/core/error/app_error.dart';
+import 'package:flare_up_host/core/utils/logger.dart';
+import 'package:flare_up_host/service/navigation_service.dart';
+import 'package:flutter/material.dart';
 
 import '../constants/api_constants.dart';
 import '../storage/secure_storage_service.dart';
+import '../routes/routs.dart';
 
 class AuthInterceptor extends Interceptor {
   final SecureStorageService storageService;
@@ -27,6 +31,7 @@ class AuthInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) async {
+    // Only attempt token refresh if we get a 401 status code
     if (response.statusCode == 401) {
       try {
         final success = await _refreshToken();
@@ -48,17 +53,18 @@ class AuthInterceptor extends Interceptor {
             return handler.resolve(cloneReq);
           }
         }
-
         // If we reach here, token refresh failed
         await _logout();
         throw AppError(
-            userMessage: ErrorMessages.sessionExpired,
-            type: ErrorType.authentication);
+          userMessage: ErrorMessages.sessionExpired,
+          type: ErrorType.authentication,
+        );
       } catch (e) {
         await _logout();
         throw AppError(
-            userMessage: ErrorMessages.sessionExpired,
-            type: ErrorType.authentication);
+          userMessage: ErrorMessages.sessionExpired,
+          type: ErrorType.authentication,
+        );
       }
     }
     return handler.next(response);
@@ -66,31 +72,50 @@ class AuthInterceptor extends Interceptor {
 
   Future<bool> _refreshToken() async {
     final refreshToken = await storageService.getRefreshToken();
-    if (refreshToken == null) return false;
+    if (refreshToken == null) {
+      Logger.debug('No refresh token available');
+      return false;
+    }
 
     try {
       final response = await dio.post(
         ApiEndpoints.baseUrl + ApiEndpoints.refreshToken,
         data: {'refresh_token': refreshToken},
+        options: Options(
+          validateStatus: (status) => status! < 500,
+        ),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.data != null) {
         final newAccessToken = response.data['access_token'];
-        await storageService.saveTokens(
-          accessToken: newAccessToken,
-          refreshToken: refreshToken,
-          userId: await storageService.getUserId() ?? '',
-        );
-        return true;
+        final newRefreshToken = response.data['refresh_token'];
+
+        if (newAccessToken != null) {
+          final userId = await storageService.getUserId();
+          if (userId != null) {
+            await storageService.saveTokens(
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken ?? refreshToken,
+              userId: userId,
+            );
+            return true;
+          }
+        }
+        Logger.debug('Token refresh failed: Invalid response data');
+        return false;
       }
+
+      Logger.debug('Token refresh failed with status: ${response.statusCode}');
+      return false;
     } catch (e) {
-      print('Error refreshing token: $e');
+      Logger.error('Error refreshing token:', e);
+      return false;
     }
-    return false;
   }
 
   Future<void> _logout() async {
     await storageService.clearAll();
-    // Redirect to login screen or emit a logout event
+    Navigator.of(NavigationService.navigatorKey.currentContext!)
+        .pushNamedAndRemoveUntil(AppRouts.signIn, (route) => false);
   }
 }

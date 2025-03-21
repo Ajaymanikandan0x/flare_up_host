@@ -125,18 +125,9 @@ class EventRepositoryImpl implements EventRepositoryDomain {
         return [];
       }
 
-      // Filter out events with invalid banner images
-      final events = response.data!
-          .where((model) {
-            final validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
-            return model.bannerImage.isNotEmpty &&
-                validExtensions.any(
-                    (ext) => model.bannerImage.toLowerCase().endsWith(ext));
-          })
-          .map((model) => model.toEntity())
-          .toList();
+      final events = response.data!.map((model) => model.toEntity()).toList();
 
-      Logger.debug('Returning ${events.length} valid events');
+      Logger.debug('Returning ${events.length} events');
       return events;
     } catch (e) {
       Logger.error('Get host events error:', e);

@@ -1,3 +1,4 @@
+import 'package:flare_up_host/core/utils/cloudinary_service.dart';
 import 'package:flare_up_host/features/events/presentation/bloc/event_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -34,6 +35,74 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
     on<FetchHostEventsEvent>(_onFetchHostEvents);
     on<UploadEventMediaEvent>(_onUploadEventMedia);
     on<FetchCategoriesEvent>(_onFetchCategories);
+    on<SelectVideoEvent>(_onSelectVideo);
+    on<SetVideoUploadingEvent>(_onSetVideoUploading);
+    on<SelectImageEvent>((event, emit) {
+      emit(ImageSelectionState(
+        selectedImage: event.image,
+        isUploading: false,
+      ));
+    });
+    on<SetImageUploadingEvent>((event, emit) {
+      if (state is ImageSelectionState) {
+        final currentState = state as ImageSelectionState;
+        emit(ImageSelectionState(
+          selectedImage: currentState.selectedImage,
+          isUploading: event.isUploading,
+        ));
+      }
+    });
+    on<UploadEventImageEvent>((event, emit) async {
+      try {
+        emit(EventImageUploadInProgress());
+        final url = await uploadEventMediaUseCase(
+          event.image!,
+          MediaType.image,
+        );
+        emit(EventImageUploadSuccess(url!));
+      } catch (e) {
+        emit(EventImageUploadFailure(e.toString()));
+      }
+    });
+    on<UploadEventVideoEvent>((event, emit) async {
+      try {
+        emit(EventVideoUploadInProgress());
+        final url = await uploadEventMediaUseCase(
+          event.video!,
+          MediaType.video,
+        );
+        if (url != null) {
+          emit(EventVideoUploadSuccess(url));
+        } else {
+          emit(const EventVideoUploadFailure('Failed to upload video'));
+        }
+      } catch (e) {
+        emit(EventVideoUploadFailure(e.toString()));
+      }
+    });
+  }
+
+  void _onSelectVideo(SelectVideoEvent event, Emitter<EventBlocState> emit) {
+    if (state is VideoSelectionState) {
+      final currentState = state as VideoSelectionState;
+      emit(VideoSelectionState(
+        selectedVideo: event.video,
+        isUploading: currentState.isUploading,
+      ));
+    } else {
+      emit(VideoSelectionState(selectedVideo: event.video));
+    }
+  }
+
+  void _onSetVideoUploading(
+      SetVideoUploadingEvent event, Emitter<EventBlocState> emit) {
+    if (state is VideoSelectionState) {
+      final currentState = state as VideoSelectionState;
+      emit(VideoSelectionState(
+        selectedVideo: currentState.selectedVideo,
+        isUploading: event.isUploading,
+      ));
+    }
   }
 
   Future<void> _onCreateEvent(
@@ -43,28 +112,29 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
     try {
       emit(EventLoading());
 
-      Logger.debug('Starting event creation');
-      Logger.debug('Event entity: ${event.eventEntity.toDebugString()}');
-      Logger.debug('Banner image file: ${event.bannerImage?.path}');
-      Logger.debug('Banner image URL: ${event.eventEntity.bannerImage}');
-
       final hosterId = await storageService.getUserId();
-      Logger.debug('Retrieved hosterId: $hosterId');
-
       if (hosterId == null) {
-        Logger.debug('Host ID not found');
         emit(const EventError('User ID not found'));
         return;
       }
 
-      if (event.bannerImage == null && event.eventEntity.bannerImage == null) {
-        Logger.debug('No banner image provided');
-        emit(const EventError('Banner image is required'));
-        return;
+      // Upload video if provided
+      String? videoUrl;
+      if (event.promoVideo != null) {
+        videoUrl = await uploadEventMediaUseCase(
+          event.promoVideo!,
+          MediaType.video,
+        );
       }
 
-      await createEventUseCase(event.eventEntity);
-      Logger.debug('Event created successfully');
+      // Create updated event entity with video URL
+      final updatedEventEntity = event.eventEntity.copyWith(
+        hostId: int.parse(hosterId),
+        promoVideo: videoUrl, // Use the uploaded video URL
+      );
+
+      Logger.debug('Creating event with video URL: $videoUrl');
+      await createEventUseCase(updatedEventEntity);
       emit(EventSuccess());
     } catch (e) {
       Logger.error('Event creation failed', e);
@@ -104,19 +174,36 @@ class EventBloc extends Bloc<EventBlocEvent, EventBlocState> {
   ) async {
     try {
       emit(EventMediaUploading());
-      final url = await uploadEventMediaUseCase(event.file, event.type);
+      final uploadType = event.type == MediaType.image
+          ? UploadType.eventBanner
+          : UploadType.video;
+
+      final url = await uploadEventMediaUseCase(
+        event.file,
+        event.type,
+      );
 
       if (url != null) {
         if (event.type == MediaType.image) {
-          emit(EventImageUploadSuccess(url));
+          emit(ImageSelectionState(
+            selectedImage: event.file,
+            isUploading: false,
+            url: url,
+          ));
         } else {
-          emit(EventVideoUploadSuccess(url));
+          emit(VideoSelectionState(
+            selectedVideo: event.file,
+            isUploading: false,
+            uploadedUrl: url,
+          ));
         }
+        Logger.debug('Media upload success, URL: $url');
       } else {
-        emit(const EventError('Failed to upload media'));
+        emit(const EventMediaUploadFailure('Failed to upload media'));
       }
     } catch (e) {
-      emit(EventError(e.toString()));
+      Logger.error('Media upload failed:', e);
+      emit(EventMediaUploadFailure(e.toString()));
     }
   }
 
